@@ -11,7 +11,11 @@
       "import": "./dist/index.js"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "LICENSE",
+    "README.md",
+    "dist"
+  ],
   "publishConfig": {
     "access": "public"
   },
@@ -35,5 +39,18 @@
     "react-dom": "catalog:",
     "tsdown": "catalog:",
     "typescript": "catalog:"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hironow/earcon",
+    "directory": "packages/react"
+  },
+  "keywords": [
+    "sonification",
+    "audio",
+    "notification",
+    "tone.js",
+    "react",
+    "earcon"
+  ]
 }

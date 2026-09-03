@@ -11,8 +11,14 @@
       "import": "./dist/index.js"
     }
   },
-  "files": ["dist"],
-  "publishConfig": { "access": "public" },
+  "files": [
+    "LICENSE",
+    "README.md",
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsdown",
     "publish:dry": "bun pm pack --dry-run",
@@ -21,5 +27,18 @@
   "devDependencies": {
     "tsdown": "catalog:",
     "typescript": "catalog:"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hironow/earcon",
+    "directory": "packages/core"
+  },
+  "keywords": [
+    "sonification",
+    "audio",
+    "notification",
+    "tone.js",
+    "react",
+    "earcon"
+  ]
 }

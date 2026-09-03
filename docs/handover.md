@@ -1,25 +1,24 @@
 # Handover
 
-**Last updated:** 2026-09-04 03:40 (JST)
+**Last updated:** 2026-09-04 04:40 (JST)
 **Updated by:** Claude Code session (earcon M0)
 
 ## Current State
 
-M0 (scaffold), M1 (`@earcon/core`: T1–T20 green, 100% coverage) and M2
+M0 (scaffold), M1 (`@earcon/core`: T1–T20 green, 100% coverage), M2
 (`@earcon/engine-tone`: presets, catalog, `createToneEngine`; demo Preset
-Auditioner; Playwright §4.5 + §9 leak check green) are done and committed on `main`.
-`just check` and `just test-e2e` pass locally.
+Auditioner; Playwright §4.5 + §9 leak check) and M3 (`@earcon/react`: provider,
+hooks, UnlockGate, sync-based wiring with 28 store/hook/SSR tests; demo Monitor
+Simulator with the four §7.3 scenarios covered by Playwright) are done and
+committed on `main`. `just check` and `just test-e2e` pass locally.
 
 ## In Progress
 
-Nothing in flight. Next milestone is M3.
+Nothing in flight. Next milestone is M4.
 
 ## Next Actions
 
-1. M3 `@earcon/react`: `NotifierProvider`, `useMonitor`, `useToneNotifier`,
-   `UnlockGate`, §5.4 wiring as engine-only pure functions (`wiring.ts`), §5.5 tests
-   with a mock engine + happy-dom; Monitor Simulator tab in the demo
-2. M4 `fromSpec` (replace the stub in `packages/engine-tone/src/fromSpec.ts`),
+1. M4 `fromSpec` (replace the stub in `packages/engine-tone/src/fromSpec.ts`),
    `specs/*.json` for sonar/parkingSensor/heartbeat/coin/chime/knock, Sound Designer tab
 3. M5 Arbiter wiring, Wallets tab, `tests/e2e/background.e2e.ts` (90 s hidden tab)
 4. M6 README Quick start, `docs/api.md`, first changeset (no publish, no deploy)
@@ -30,6 +29,9 @@ Nothing in flight. Next milestone is M3.
 - `bun publish` needs npm login and the `@earcon` org; deferred until a remote exists.
 - One-shot presets use monophonic Tone synths; the engine spaces same-instant
   `play()` calls by 10 ms (`MIN_ONESHOT_GAP_SEC`) so they do not throw.
+- React StrictMode (dev) runs effects mount → cleanup → mount. The store's tick
+  loop is therefore `start()`/`stop()`-able and the provider never `dispose()`s it
+  in an effect cleanup. Found by the Simulator stale e2e; keep that test.
 - The §9 leak check compares JS heap after forced GC (`--expose-gc`); Tone exposes
   no node count. Threshold 4 MB growth between cycle 10 and 50.
 

@@ -27,6 +27,32 @@ appears in a core test name, so this table cannot silently drift.
 | T19 | `packages/core/src/arbiter.test.ts` | `T19 determinism: same level and intensity → id ascending` |
 | T20 | `packages/core/src/purity.test.ts` + `.semgrep/rules/earcon-core-no-time.yaml` | `T20 core is time- and host-independent` |
 
+## §4.5 engine (Playwright, `tests/e2e/engine.e2e.ts`)
+
+| check | test name |
+| --- | --- |
+| (1) running context after unlock | `(1) unlock → Tone.getContext().state === "running"` |
+| (2) all presets start/set/stop/dispose | `(2) every preset survives start/set/stop/dispose and play/dispose without throwing` |
+| (3) parkingSensor ≈ 11 Hz | `(3) parkingSensor: set(1) drives the Clock to ≈ 11 Hz` |
+| §9 leak check | `tests/e2e/leak.e2e.ts`: `50 start/stop cycles keep the heap stable after dispose` |
+
+## §5.5 react wiring (`packages/react/src/store.test.ts`, `hooks.test.tsx`)
+
+| case | test name |
+| --- | --- |
+| enter → start | `enter starts the level sound with the current intensity; escalate one-shot plays` |
+| intensity → set | `intensity events call set() on the playing level sound` |
+| ack → stop | `acknowledge stops the sound; intensity keeps flowing silently; ack-cleared on escalate restarts` |
+| stale → knock repeats | `stale stops the sound and repeats the stale one-shot every staleRepeatSec; resume restores the level sound` |
+| worst-only silences the second monitor | `worst-only: the second monitor at a lower level stays silent until it becomes the worst` |
+| id change → dispose | `changing id disposes the old monitor and creates a new one` |
+| SSR (§5.2) | `ssr.test.tsx`: `renders with status locked and never touches the engine` |
+
+## §8 M3 simulator scenarios (`tests/e2e/simulator.e2e.ts`)
+
+`whipsaw`, `crash`, `slow-approach`, `stale` each have one test; the manual slider
+has one.
+
 Additional core rules pinned by tests (ADR-0001): single-level band width, demotion to
 safe, `staleAfterMs: 0`, `dt <= 0` while stale, double `acknowledge()`, `reset()`,
 increasing direction, arbiter exclusions / ranking / `top-n`.

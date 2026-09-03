@@ -346,6 +346,16 @@ select {
   color: var(--ink-muted);
 }
 
+.row__hint {
+  display: block;
+  font-size: 12px;
+  color: var(--ink-dim);
+}
+
+.led[data-sustained='true'][data-on='true'] {
+  animation: none;
+}
+
 .row__controls {
   display: flex;
   align-items: center;
@@ -466,7 +476,17 @@ select {
   .row__use {
     grid-column: 2;
   }
-  .row__controls {
+  .row__hint {
+  display: block;
+  font-size: 12px;
+  color: var(--ink-dim);
+}
+
+.led[data-sustained='true'][data-on='true'] {
+  animation: none;
+}
+
+.row__controls {
     grid-column: 2;
     flex-wrap: wrap;
   }

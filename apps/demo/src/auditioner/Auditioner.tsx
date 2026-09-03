@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Bus, ContinuousSound, Engine, EngineStatus, OneShotSound } from '@earcon/core'
-import { catalog, presetRate } from '@earcon/engine-tone'
+import { catalog, presetHint, presetRate } from '@earcon/engine-tone'
 
 interface Props {
   engine: Engine
@@ -24,8 +24,8 @@ export function Auditioner({ engine, status }: Props) {
   return (
     <>
       <p className="rack__intro">
-        14 のプリセットをその場で聴く。連続音は intensity（Level 内の切迫度、0 → 1）で速さと高さが変わる。
-        単発音は遷移の瞬間に 1 回だけ鳴る。LED は実際の反復レートで点滅する。
+        28 のプリセットをその場で聴く。連続音は intensity（Level 内の切迫度、0 → 1）で速さや高さが変わる。
+        単発音は遷移の瞬間に 1 回だけ鳴る。LED は実際の反復レートで点滅する。各行の薄い一文が「何を聴き取るか」。
       </p>
 
       <section className="section" aria-labelledby="sec-continuous">
@@ -80,6 +80,7 @@ function ContinuousRow({ id, metaphor, use, engine, bus, locked }: RowProps) {
 
   const rate = presetRate[id]
   const hz = rate ? lerp(rate.minHz, rate.maxHz, intensity) : 1
+  const sustained = rate?.note === 'sustained'
   const ledColor = intensity < 0.4 ? 'var(--watch)' : intensity < 0.75 ? 'var(--warn)' : 'var(--critical)'
 
   const toggle = () => {
@@ -94,7 +95,8 @@ function ContinuousRow({ id, metaphor, use, engine, bus, locked }: RowProps) {
       <span
         className="led"
         data-on={playing}
-        style={{ '--led-period': `${1 / hz}s`, '--led-color': ledColor } as React.CSSProperties}
+        style={{ '--led-period': sustained ? '0s' : `${1 / hz}s`, '--led-color': ledColor } as React.CSSProperties}
+        data-sustained={sustained}
         aria-hidden
       />
       <span className="row__id">{id}</span>
@@ -105,6 +107,7 @@ function ContinuousRow({ id, metaphor, use, engine, bus, locked }: RowProps) {
         <button className="link" onClick={() => setShowJson((v) => !v)}>
           JSON
         </button>
+        <span className="row__hint">{presetHint[id]}</span>
       </span>
       <div className="row__controls">
         <button
@@ -131,7 +134,7 @@ function ContinuousRow({ id, metaphor, use, engine, bus, locked }: RowProps) {
           }}
         />
         <span className="row__rate">
-          {intensity.toFixed(2)} · {rate?.note ? `${hz.toFixed(1)}/s` : `${hz.toFixed(2)} Hz`}
+          {intensity.toFixed(2)} · {sustained ? '持続' : rate?.note ? `${hz.toFixed(1)}/s` : `${hz.toFixed(2)} Hz`}
         </span>
       </div>
       {showJson && <pre className="row__json">{JSON.stringify({ kind: 'preset', id })}</pre>}
@@ -169,6 +172,7 @@ function OneShotRow({ id, metaphor, use, engine, bus, locked }: RowProps) {
         <button className="link" onClick={() => setShowJson((v) => !v)}>
           JSON
         </button>
+        <span className="row__hint">{presetHint[id]}</span>
       </span>
       <div className="row__controls">
         <button className="btn" onClick={play} disabled={locked} data-testid={`play-${id}`}>

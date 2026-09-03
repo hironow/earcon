@@ -197,11 +197,12 @@ export const redAlert: ContinuousFactory = ({ out }) => {
 
 /** 失速警報クリッカー — 落ちる寸前。ブラウンノイズの等間隔連打 6→28 Hz、帯域が上がる */
 export const stallWarning: ContinuousFactory = ({ out }) => {
-  const bp = new Tone.Filter({ frequency: 900, type: 'bandpass', Q: 2 }).connect(out)
+  // pink noise keeps energy in the 700–1400 Hz band (brown noise lost ~30 dB there; measured)
+  const bp = new Tone.Filter({ frequency: 900, type: 'bandpass', Q: 1 }).connect(out)
   const noise = new Tone.NoiseSynth({
-    noise: { type: 'brown' },
-    envelope: { attack: 0.001, decay: 0.03, sustain: 0, release: 0.01 },
-    volume: -6,
+    noise: { type: 'pink' },
+    envelope: { attack: 0.001, decay: 0.05, sustain: 0, release: 0.01 },
+    volume: 2,
   }).connect(bp)
   const t = ticker(
     (time, i) => {
@@ -548,7 +549,7 @@ export const gong: OneShotFactory = ({ out }) => {
     resonance: 300,
     octaves: 1.5,
     envelope: { attack: 0.01, decay: 2.5, release: 3 },
-    volume: -10,
+    volume: -22, // MetalSynth is hot: -10 clipped at +5.6 dBFS (measured)
   }).connect(delay)
   return {
     play({ transpose = 0, velocity = 0.9, time = Tone.now() }: OneShotOptions = {}) {
@@ -619,11 +620,11 @@ export const powerDown: OneShotFactory = ({ out }) => {
 
 /** 無線スケルチ — 接続復帰（knock の対）。40 ms のノイズにフィルタを素早く開く */
 export const squelch: OneShotFactory = ({ out }) => {
-  const bp = new Tone.Filter({ frequency: 1800, type: 'bandpass', Q: 1 }).connect(out)
+  const bp = new Tone.Filter({ frequency: 1800, type: 'bandpass', Q: 0.7 }).connect(out)
   const noise = new Tone.NoiseSynth({
     noise: { type: 'white' },
-    envelope: { attack: 0.001, decay: 0.04, sustain: 0, release: 0.01 },
-    volume: -12,
+    envelope: { attack: 0.001, decay: 0.06, sustain: 0, release: 0.01 },
+    volume: 0,
   }).connect(bp)
   return {
     play({ time = Tone.now() }: OneShotOptions = {}) {

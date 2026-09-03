@@ -1,12 +1,14 @@
-import { useState, useSyncExternalStore } from 'react'
+import { useState } from 'react'
+import { NotifierProvider, UnlockGate, useToneNotifier } from '@earcon/react'
 import { Auditioner } from './auditioner/Auditioner'
 import { engine } from './engine'
+import { Simulator } from './simulator/Simulator'
 
 type Tab = 'auditioner' | 'simulator' | 'designer' | 'wallets'
 
 const TABS: Array<{ id: Tab; label: string; ready: boolean }> = [
   { id: 'auditioner', label: 'Preset Auditioner', ready: true },
-  { id: 'simulator', label: 'Monitor Simulator', ready: false },
+  { id: 'simulator', label: 'Monitor Simulator', ready: true },
   { id: 'designer', label: 'Sound Designer', ready: false },
   { id: 'wallets', label: 'Wallets', ready: false },
 ]
@@ -19,9 +21,16 @@ const STATUS_LABEL: Record<string, string> = {
 }
 
 export function App() {
-  const status = useSyncExternalStore(engine.onStatusChange, () => engine.status)
+  return (
+    <NotifierProvider engine={engine} policy={{ mode: 'worst-only' }}>
+      <Shell />
+    </NotifierProvider>
+  )
+}
+
+function Shell() {
+  const notifier = useToneNotifier()
   const [tab, setTab] = useState<Tab>('auditioner')
-  const [muted, setMuted] = useState(false)
   const [masterDb, setMasterDb] = useState(-6)
 
   return (
@@ -32,31 +41,29 @@ export function App() {
         </h1>
         <div className="rail__spacer" />
         <div className="rail__group">
-          <span className="chip" data-status={status} data-testid="status">
-            {STATUS_LABEL[status]}
+          <span className="chip" data-status={notifier.status} data-testid="status">
+            {STATUS_LABEL[notifier.status]}
           </span>
-          {status === 'locked' && (
-            <button className="btn btn--primary" onClick={() => void engine.unlock()} data-testid="unlock">
-              音を有効化
-            </button>
-          )}
-          {status === 'suspended' && (
-            <button className="btn btn--primary" onClick={() => void engine.resume()}>
-              再開
-            </button>
-          )}
+          <UnlockGate>
+            {({ status, unlock, resume }) =>
+              status === 'locked' ? (
+                <button className="btn btn--primary" onClick={() => void unlock()} data-testid="unlock">
+                  音を有効化
+                </button>
+              ) : status === 'suspended' ? (
+                <button className="btn btn--primary" onClick={() => void resume()}>
+                  再開
+                </button>
+              ) : null
+            }
+          </UnlockGate>
         </div>
         <div className="rail__group">
-          <button
-            className="btn"
-            aria-pressed={muted}
-            onClick={() => {
-              const next = !muted
-              setMuted(next)
-              engine.setMuted(next)
-            }}
-          >
-            {muted ? 'ミュート中' : 'ミュート'}
+          <button className="btn" aria-pressed={notifier.muted} onClick={() => notifier.setMuted(!notifier.muted)}>
+            {notifier.muted ? 'ミュート中' : 'ミュート'}
+          </button>
+          <button className="btn" onClick={notifier.acknowledgeAll} title="鳴っている Monitor をすべて了解にする">
+            全部了解
           </button>
         </div>
         <div className="rail__group">
@@ -73,7 +80,7 @@ export function App() {
             onChange={(e) => {
               const db = Number(e.target.value)
               setMasterDb(db)
-              engine.setMasterVolume(db)
+              notifier.setMasterVolume(db)
             }}
           />
           <span className="row__rate" style={{ minWidth: 48 }}>
@@ -92,6 +99,7 @@ export function App() {
             disabled={!t.ready}
             title={t.ready ? undefined : 'あとのマイルストーンで追加'}
             onClick={() => setTab(t.id)}
+            data-testid={`tab-${t.id}`}
           >
             {t.label}
           </button>
@@ -99,7 +107,9 @@ export function App() {
       </nav>
 
       <main className="rack">
-        {tab === 'auditioner' ? <Auditioner engine={engine} status={status} /> : <p className="placeholder">この区画はまだ空です。</p>}
+        {tab === 'auditioner' && <Auditioner engine={engine} status={notifier.status} />}
+        {tab === 'simulator' && <Simulator />}
+        {(tab === 'designer' || tab === 'wallets') && <p className="placeholder">この区画はまだ空です。</p>}
       </main>
     </>
   )

@@ -1,6 +1,6 @@
 # Handover
 
-**Last updated:** 2026-09-04 04:40 (JST)
+**Last updated:** 2026-09-04 05:20 (JST)
 **Updated by:** Claude Code session (earcon M0)
 
 ## Current State
@@ -49,6 +49,9 @@ Nothing in flight. Next milestone is M4.
   (happy-dom preload); root `bunfig.toml` is not inherited.
 - The demo exposes `window.__earcon` (dev only) for Playwright; `ticker()` sounds
   expose `.clock` for the parkingSensor rate assertion.
+- Demo-wide level → sound assignments live in `apps/demo/src/sound-assignments.ts`;
+  the Simulator folds the assigned level ids into its monitor id so `useMonitor`
+  recreates the monitor (it ignores non-id option changes by design).
 - Design tokens for the demo live in `apps/demo/src/styles.css`; the rate LED per
   row is the one signature element (blinks at the mapped Hz from `presetRate`).
 

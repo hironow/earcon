@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { NotifierProvider, UnlockGate, useToneNotifier } from '@earcon/react'
 import { Auditioner } from './auditioner/Auditioner'
+import { Designer } from './designer/Designer'
 import { engine } from './engine'
 import { Simulator } from './simulator/Simulator'
 
@@ -9,7 +10,7 @@ type Tab = 'auditioner' | 'simulator' | 'designer' | 'wallets'
 const TABS: Array<{ id: Tab; label: string; ready: boolean }> = [
   { id: 'auditioner', label: 'Preset Auditioner', ready: true },
   { id: 'simulator', label: 'Monitor Simulator', ready: true },
-  { id: 'designer', label: 'Sound Designer', ready: false },
+  { id: 'designer', label: 'Sound Designer', ready: true },
   { id: 'wallets', label: 'Wallets', ready: false },
 ]
 
@@ -109,7 +110,8 @@ function Shell() {
       <main className="rack">
         {tab === 'auditioner' && <Auditioner engine={engine} status={notifier.status} />}
         {tab === 'simulator' && <Simulator />}
-        {(tab === 'designer' || tab === 'wallets') && <p className="placeholder">この区画はまだ空です。</p>}
+        {tab === 'designer' && <Designer engine={engine} status={notifier.status} />}
+        {tab === 'wallets' && <p className="placeholder">この区画はまだ空です。</p>}
       </main>
     </>
   )

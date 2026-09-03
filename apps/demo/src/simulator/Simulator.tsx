@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { Direction, Level, MonitorEvent, MonitorState, Urgency } from '@earcon/core'
 import { useMonitor } from '@earcon/react'
+import { useAssignments } from '../sound-assignments'
 import { SCENARIOS, type ScenarioId } from './scenarios'
 
 interface SimConfig {
@@ -56,8 +57,11 @@ export function Simulator() {
     setLog((prev) => [...events.map((e) => ({ t, text: describe(e) })), ...prev].slice(0, 20))
   }, [])
 
+  const assignments = useAssignments()
+  const assignKey = Object.keys(assignments).sort().join(',')
   const { state, update, acknowledge } = useMonitor({
-    id: `sim-${applied.rev}`,
+    id: `sim-${applied.rev}${assignKey ? `-${assignKey}` : ''}`,
+    sounds: assignments,
     direction: applied.config.direction,
     levels: applied.config.levels,
     urgency: applied.config.urgency,
@@ -116,7 +120,7 @@ export function Simulator() {
             <h2 className="section__title" id="sim-readout">
               Readout
             </h2>
-            <span className="section__sub">monitor id: sim-{applied.rev}</span>
+            <span className="section__sub">monitor id: sim-{applied.rev}{assignKey ? ` · Designer の音: ${assignKey}` : ''}</span>
           </div>
 
           <Track value={value} levels={applied.config.levels} direction={applied.config.direction} max={trackMax} level={state.level} />

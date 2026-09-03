@@ -48,6 +48,17 @@ appears in a core test name, so this table cannot silently drift.
 | id change → dispose | `changing id disposes the old monitor and creates a new one` |
 | SSR (§5.2) | `ssr.test.tsx`: `renders with status locked and never touches the engine` |
 
+## §4.4 fromSpec (`packages/engine-tone/src/fromSpec.test.ts`, `specs.test.ts`)
+
+Voice → Tone class table, fx chain order, one-shot notes/transpose/velocity, noise
+without pitch, linear/exp rate, pitch at intensity, pattern offsets, defaults; the six
+`specs/*.json` twins build and trigger.
+
+## §8 M4 designer round trip (`tests/e2e/designer.e2e.ts`)
+
+One test: twin preview (continuous + oneShot), JSON edit → load, save to
+localStorage, assign to `warn`, Simulator enters warn with the assigned sound.
+
 ## §8 M3 simulator scenarios (`tests/e2e/simulator.e2e.ts`)
 
 `whipsaw`, `crash`, `slow-approach`, `stale` each have one test; the manual slider

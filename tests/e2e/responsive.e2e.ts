@@ -33,10 +33,11 @@ async function audit(page: Page, width: number) {
         return b.width > 0 && b.height < 44
       })
       .map((el) => `${el.tagName.toLowerCase()}.${[...el.classList].join('.')}`)
+    const railHeight = document.querySelector('header')!.getBoundingClientRect().height
     const tall = [...document.querySelectorAll('header .btn')].filter((el) => el.getBoundingClientRect().height > 48).map((el) => el.textContent?.trim() ?? '')
     const selected = document.querySelector('.tab[aria-selected="true"]')!.getBoundingClientRect()
     const selectedVisible = selected.left >= -1 && selected.right <= vw + 1
-    return { overflow: doc.scrollWidth - doc.clientWidth, wide: [...new Set(wide)], small: [...new Set(small)], tall, selectedVisible }
+    return { overflow: doc.scrollWidth - doc.clientWidth, wide: [...new Set(wide)], small: [...new Set(small)], tall, selectedVisible, railHeight }
   }, width)
 }
 
@@ -55,6 +56,7 @@ for (const vp of VIEWPORTS) {
       if (vp.touch) expect(r.small, `${tab}: controls under 44 px`).toEqual([])
       expect(r.tall, `${tab}: header buttons wrapped onto two lines`).toEqual([])
       expect(r.selectedVisible, `${tab}: selected tab scrolled out of view`).toBe(true)
+      expect(r.railHeight, `${tab}: header taller than two rows`).toBeLessThanOrEqual(120)
     }
     await context.close()
   })

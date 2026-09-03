@@ -1,6 +1,6 @@
 # Handover
 
-**Last updated:** 2026-09-04 05:00 (JST)
+**Last updated:** 2026-09-04 05:10 (JST)
 **Updated by:** Claude Code session (earcon M0)
 
 ## Current State
@@ -26,7 +26,9 @@ horizontal overflow on 8 viewports × 4 tabs, 44 px touch targets, safe-area ins
 (Playwright MCP subagent) then fixed the 768–899 px header wrap, the 2.7:1
 `--ink-dim` contrast, selected-tab visibility in the scrolling strip, collapsible
 Designer fieldsets on phones, landscape-phone density, and the Fold-open
-two-column boundary (860 px). `just dev-lan` serves the demo on the LAN for phones.
+two-column boundary (860 px); second pass folded the Designer side sections and
+twin links on phones and compacted the rail to two rows (≤ 110 px). Re-review: all
+findings fixed, no regressions. `just dev-lan` serves the demo on the LAN for phones.
 
 ## In Progress
 

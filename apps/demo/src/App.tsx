@@ -75,18 +75,16 @@ function Shell({ policy, onPolicy }: { policy: ArbiterPolicy; onPolicy: (p: Arbi
             }
           </UnlockGate>
         </div>
-        <div className="rail__group">
+        <div className="rail__group rail__group--controls">
           <button className="btn" aria-pressed={notifier.muted} onClick={() => notifier.setMuted(!notifier.muted)}>
             {notifier.muted ? 'ミュート中' : 'ミュート'}
           </button>
           <button className="btn" onClick={notifier.acknowledgeAll} title="鳴っている Monitor をすべて了解にする">
             全部了解
           </button>
-        </div>
-        <div className="rail__group">
           <span className="rail__label">Master</span>
           <input
-            className="range"
+            className="range rail__master-range"
             style={{ width: 120 }}
             type="range"
             min={-40}
@@ -100,7 +98,7 @@ function Shell({ policy, onPolicy }: { policy: ArbiterPolicy; onPolicy: (p: Arbi
               notifier.setMasterVolume(db)
             }}
           />
-          <span className="row__rate" style={{ minWidth: 48 }}>
+          <span className="row__rate rail__master-db" style={{ minWidth: 48 }}>
             {masterDb} dB
           </span>
         </div>

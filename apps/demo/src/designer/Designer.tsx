@@ -133,11 +133,21 @@ export function Designer({ engine, status }: Props) {
             </h2>
             <span className="section__sub">
               下敷き:{' '}
-              {TWINS.map((t) => (
-                <button key={t.id} className="link" onClick={() => setSpec(t.spec)} data-testid={`twin-${t.id}`}>
-                  {t.id}
-                </button>
-              )).reduce<React.ReactNode[]>((acc, el, i) => (i ? [...acc, ' · ', el] : [el]), [])}
+              {narrow ? (
+                <select className="num" style={{ width: 150, textAlign: 'left' }} value="" aria-label="下敷きを読み込む"
+                  onChange={(e) => { const t = TWINS.find((x) => x.id === e.target.value); if (t) setSpec(t.spec) }}>
+                  <option value="">選ぶ…</option>
+                  {TWINS.map((t) => (
+                    <option key={t.id} value={t.id}>{t.id}</option>
+                  ))}
+                </select>
+              ) : (
+                TWINS.map((t) => (
+                  <button key={t.id} className="link" onClick={() => setSpec(t.spec)} data-testid={`twin-${t.id}`}>
+                    {t.id}
+                  </button>
+                )).reduce<React.ReactNode[]>((acc, el, i) => (i ? [...acc, ' · ', el] : [el]), [])
+              )}
             </span>
           </div>
           <div className="config">
@@ -263,13 +273,7 @@ export function Designer({ engine, status }: Props) {
         </section>
 
         <div className="designer__side">
-          <section className="section" aria-labelledby="dz-preview">
-            <div className="section__head">
-              <h2 className="section__title" id="dz-preview">
-                Preview
-              </h2>
-              <span className="section__sub">{spec.mode}</span>
-            </div>
+          <FoldSection id="dz-preview" title="Preview" sub={spec.mode} narrow={narrow} defaultOpen>
             <div className="config">
               {spec.mode === 'continuous' ? (
                 <div className="drivers__manual">
@@ -297,15 +301,9 @@ export function Designer({ engine, status }: Props) {
                 </ul>
               )}
             </div>
-          </section>
+          </FoldSection>
 
-          <section className="section" aria-labelledby="dz-json">
-            <div className="section__head">
-              <h2 className="section__title" id="dz-json">
-                JSON
-              </h2>
-              <span className="section__sub">編集して「読み込む」で反映</span>
-            </div>
+          <FoldSection id="dz-json" title="JSON" sub="編集して「読み込む」で反映" narrow={narrow} defaultOpen={false}>
             <div className="config">
               <textarea className="json" value={jsonText} onChange={(e) => setJsonText(e.target.value)} spellCheck={false} data-testid="dz-json" />
               {jsonError && <pre className="config__errors" style={{ whiteSpace: 'pre-wrap', paddingLeft: 0, listStyle: 'none' }} data-testid="dz-json-error">{jsonError}</pre>}
@@ -314,15 +312,9 @@ export function Designer({ engine, status }: Props) {
                 <button className="btn" onClick={() => void navigator.clipboard?.writeText(jsonText)}>コピー</button>
               </div>
             </div>
-          </section>
+          </FoldSection>
 
-          <section className="section" aria-labelledby="dz-save">
-            <div className="section__head">
-              <h2 className="section__title" id="dz-save">
-                Save
-              </h2>
-              <span className="section__sub">localStorage · {saved.length} 件</span>
-            </div>
+          <FoldSection id="dz-save" title="Save" sub={`localStorage · ${saved.length} 件`} narrow={narrow} defaultOpen={false}>
             <div className="config">
               <label className="field">
                 <span className="field__label">name</span>
@@ -345,15 +337,9 @@ export function Designer({ engine, status }: Props) {
                 </ul>
               )}
             </div>
-          </section>
+          </FoldSection>
 
-          <section className="section" aria-labelledby="dz-assign">
-            <div className="section__head">
-              <h2 className="section__title" id="dz-assign">
-                Assign
-              </h2>
-              <span className="section__sub">Simulator の Level に割り当てる</span>
-            </div>
+          <FoldSection id="dz-assign" title="Assign" sub="Simulator の Level に割り当てる" narrow={narrow} defaultOpen>
             <div className="config">
               <div className="config__actions">
                 {LEVELS.map((l) => (
@@ -373,7 +359,7 @@ export function Designer({ engine, status }: Props) {
               </ul>
               <p className="config__hint">連続音（continuous）だけ割り当てられる。割り当てた瞬間に Simulator の Monitor が作り直される。</p>
             </div>
-          </section>
+          </FoldSection>
         </div>
       </div>
     </>
@@ -389,6 +375,30 @@ function useNarrow(): boolean {
     return () => mq.removeEventListener('change', on)
   }, [])
   return narrow
+}
+
+/** A section whose head becomes a toggle on phones; always open on wider screens. */
+function FoldSection({ id, title, sub, narrow, defaultOpen, children }: { id: string; title: string; sub?: ReactNode; narrow: boolean; defaultOpen: boolean; children: ReactNode }) {
+  const [open, setOpen] = useState(defaultOpen)
+  useEffect(() => setOpen(defaultOpen), [defaultOpen])
+  const expanded = !narrow || open
+  return (
+    <section className="section" aria-labelledby={id}>
+      {narrow ? (
+        <button type="button" className="section__head section__head--toggle" aria-expanded={expanded} onClick={() => setOpen((o) => !o)}>
+          <h2 className="section__title" id={id}>{title}</h2>
+          <span className="section__sub">{sub}</span>
+          <span className="section__chevron" aria-hidden>{expanded ? '▾' : '▸'}</span>
+        </button>
+      ) : (
+        <div className="section__head">
+          <h2 className="section__title" id={id}>{title}</h2>
+          <span className="section__sub">{sub}</span>
+        </div>
+      )}
+      {expanded && children}
+    </section>
+  )
 }
 
 /** A fieldset that folds on phones (open by default on wider screens). */

@@ -366,6 +366,22 @@ select.num {
   background: var(--panel-2);
 }
 
+.section__head--toggle {
+  width: 100%;
+  border: none;
+  border-bottom: 1px solid var(--rule);
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  min-height: var(--control-h);
+  font: inherit;
+}
+
+.section__chevron {
+  margin-left: auto;
+  color: var(--ink-dim);
+}
+
 .section__title {
   margin: 0;
   font-family: var(--font-display);
@@ -571,6 +587,16 @@ select.num {
 @media (max-width: 720px) {
   :root {
     --pad-x: calc(var(--u) * 2);
+  }
+  /* Two rows: brand + status / mute + ack + master slider */
+  .rail__master-db {
+    display: none;
+  }
+  .rail__master-range {
+    width: 72px !important;
+  }
+  .rail__group--controls {
+    gap: 6px;
   }
   .row {
     grid-template-columns: 24px 1fr;

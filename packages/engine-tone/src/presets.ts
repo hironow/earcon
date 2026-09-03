@@ -194,6 +194,191 @@ export const redAlert: ContinuousFactory = ({ out }) => {
   }
 }
 
+
+/** 失速警報クリッカー — 落ちる寸前。ブラウンノイズの等間隔連打 6→28 Hz、帯域が上がる */
+export const stallWarning: ContinuousFactory = ({ out }) => {
+  const bp = new Tone.Filter({ frequency: 900, type: 'bandpass', Q: 2 }).connect(out)
+  const noise = new Tone.NoiseSynth({
+    noise: { type: 'brown' },
+    envelope: { attack: 0.001, decay: 0.03, sustain: 0, release: 0.01 },
+    volume: -6,
+  }).connect(bp)
+  const t = ticker(
+    (time, i) => {
+      bp.frequency.setValueAtTime(lerp(700, 1400, i), time)
+      noise.triggerAttackRelease(0.02, time)
+    },
+    (i) => lerp(6, 28, i),
+  )
+  return { ...t, dispose: () => { t.dispose(); noise.dispose(); bp.dispose() } }
+}
+
+/** ミサイルロックオン — 狙われている。矩形波ビープ 3→30 Hz、デューティ比が上がって最後は連続音に融合する */
+export const rwrLock: ContinuousFactory = ({ out }) => {
+  const synth = new Tone.Synth({
+    oscillator: { type: 'square' },
+    envelope: { attack: 0.002, decay: 0.01, sustain: 1, release: 0.01 },
+    volume: -16,
+  }).connect(out)
+  const hz = (i: number) => lerp(3, 30, i)
+  const t = ticker(
+    (time, i) => {
+      const period = 1 / hz(i)
+      const duty = i >= 0.95 ? 1.05 : lerp(0.2, 0.9, i) // ≥ 0.95: notes overlap → one continuous tone
+      synth.triggerAttackRelease(1200, period * duty, time)
+    },
+    hz,
+  )
+  return { ...t, dispose: () => { t.dispose(); synth.dispose() } }
+}
+
+/** パルスオキシメータ — 健全度そのものの低下。レートは一定、ピッチが 880→330 Hz に下がり、危険域で tremolo が乗る */
+export const spo2Pulse: ContinuousFactory = ({ out }) => {
+  const tremolo = new Tone.Tremolo({ frequency: 9, depth: 0 }).connect(out)
+  const synth = new Tone.Synth({
+    oscillator: { type: 'triangle' },
+    envelope: { attack: 0.005, decay: 0.08, sustain: 0.2, release: 0.05 },
+    volume: -8,
+  }).connect(tremolo)
+  const depthOf = (i: number) => (i > 0.6 ? lerp(0, 0.8, (i - 0.6) / 0.4) : 0)
+  let tremoloOn = false
+  const t = ticker(
+    (time, i) => synth.triggerAttackRelease(lerp(880, 330, i), 0.1, time),
+    () => 1.2, // 72 bpm, fixed
+  )
+  return {
+    start(i) {
+      if (!tremoloOn) {
+        tremolo.start()
+        tremoloOn = true
+      }
+      tremolo.depth.value = depthOf(i)
+      t.start(i)
+    },
+    set(i) {
+      tremolo.depth.rampTo(depthOf(i), 0.2)
+      t.set(i)
+    },
+    stop() {
+      t.stop()
+      if (tremoloOn) {
+        tremolo.stop()
+        tremoloOn = false
+      }
+    },
+    dispose() {
+      t.dispose()
+      synth.dispose()
+      tremolo.dispose()
+    },
+  }
+}
+
+/** 車線逸脱ランブル — 想定レンジからの逸脱。低域ピンクノイズのバーストが 1.2 s→0.15 s 間隔に詰まり、少し明るくなる */
+export const laneDeparture: ContinuousFactory = ({ out }) => {
+  const lp = new Tone.Filter(400, 'lowpass').connect(out)
+  const noise = new Tone.NoiseSynth({
+    noise: { type: 'pink' },
+    envelope: { attack: 0.005, decay: 0.12, sustain: 0.3, release: 0.05 },
+    volume: -4,
+  }).connect(lp)
+  const t = ticker(
+    (time, i) => {
+      lp.frequency.setValueAtTime(lerp(300, 900, i), time)
+      noise.triggerAttackRelease(0.15, time)
+    },
+    (i) => 1 / lerp(1.2, 0.15, i),
+  )
+  return { ...t, dispose: () => { t.dispose(); noise.dispose(); lp.dispose() } }
+}
+
+/** 霧笛 — 見えない接近。低い長音の間隔が 8 s→1.5 s に詰まり、基音 110→160 Hz、倍音が増える */
+export const foghorn: ContinuousFactory = ({ out }) => {
+  const synth = new Tone.FMSynth({
+    harmonicity: 1,
+    modulationIndex: 1.5,
+    oscillator: { type: 'sine' },
+    modulation: { type: 'square' },
+    envelope: { attack: 0.3, decay: 0.2, sustain: 0.8, release: 0.8 },
+    modulationEnvelope: { attack: 0.3, decay: 0.5, sustain: 0.5, release: 0.5 },
+    volume: -8,
+  }).connect(out)
+  const hz = (i: number) => 1 / lerp(8, 1.5, i)
+  const t = ticker(
+    (time, i) => {
+      synth.modulationIndex.setValueAtTime(lerp(1.5, 4, i), time)
+      synth.triggerAttackRelease(lerp(110, 160, i), Math.min(1.2, (1 / hz(i)) * 0.6), time)
+    },
+    hz,
+  )
+  return { ...t, dispose: () => { t.dispose(); synth.dispose() } }
+}
+
+/** ケトルの笛 — 沸点直前。細い持続音が 2.2→3.4 kHz へ上がり、揺らぎが消えて音量が立ち上がる。クロックなし */
+export const kettle: ContinuousFactory = ({ out }) => {
+  const gain = new Tone.Gain(0).connect(out)
+  const hp = new Tone.Filter(1500, 'highpass').connect(gain)
+  const osc = new Tone.Oscillator(2600, 'sine').connect(hp)
+  osc.volume.value = -14
+  const lfo = new Tone.LFO({ frequency: 6, min: -40, max: 40, type: 'sine' })
+  lfo.connect(osc.detune)
+  const set = (i: number) => {
+    osc.frequency.rampTo(lerp(2200, 3400, i), 0.3)
+    lfo.amplitude.rampTo(1 - i, 0.3)
+    gain.gain.rampTo(lerp(0.15, 1, i), 0.3)
+  }
+  return {
+    start(i) {
+      gain.gain.value = lerp(0.15, 1, i)
+      if (osc.state !== 'started') {
+        osc.start()
+        lfo.start()
+      }
+      set(i)
+    },
+    set,
+    stop() {
+      osc.stop()
+      lfo.stop()
+    },
+    dispose() {
+      lfo.dispose()
+      osc.dispose()
+      hp.dispose()
+      gain.dispose()
+    },
+  }
+}
+
+/** 秒針・時限装置 — 残り時間。厳密に等間隔のクリックが 1→8 Hz へ accelerando、後半は 2 拍ごとにアクセント */
+export const tickingClock: ContinuousFactory = ({ out }) => {
+  const wood = new Tone.MembraneSynth({
+    pitchDecay: 0.005,
+    octaves: 1,
+    envelope: { attack: 0.001, decay: 0.04, sustain: 0, release: 0.02 },
+    volume: -10,
+  }).connect(out)
+  const metal = new Tone.MetalSynth({
+    harmonicity: 3,
+    modulationIndex: 12,
+    resonance: 2500,
+    octaves: 0.5,
+    envelope: { attack: 0.001, decay: 0.03, release: 0.01 },
+    volume: -28,
+  }).connect(out)
+  let count = 0
+  const t = ticker(
+    (time, i) => {
+      count++
+      const accent = i > 0.5 && count % 2 === 0
+      wood.triggerAttackRelease(accent ? 'A3' : 'E3', 0.03, time)
+      metal.triggerAttackRelease(accent ? 'C6' : 'A5', 0.02, time, accent ? 0.6 : 0.3)
+    },
+    (i) => lerp(1, 8, i),
+  )
+  return { ...t, dispose: () => { t.dispose(); wood.dispose(); metal.dispose() } }
+}
+
 // ================================================================ one-shot
 // 「起こった」「切り替わった」を1回で伝える音
 
@@ -325,6 +510,184 @@ export const chime: OneShotFactory = ({ out }) => {
   }
 }
 
+
+/** SOS — 複数ウォレットが同時に危険域へ。· · · — — — · · · のパターン自体が意味を持つ */
+export const sosMorse: OneShotFactory = ({ out }) => {
+  const synth = new Tone.Synth({
+    oscillator: { type: 'sine' },
+    envelope: { attack: 0.005, decay: 0.02, sustain: 1, release: 0.02 },
+    volume: -10,
+  }).connect(out)
+  const dot = 0.06
+  const dash = 0.18
+  return {
+    play({ transpose = 0, time = Tone.now() }: OneShotOptions = {}) {
+      const f = semis('F5', transpose)
+      let at = time
+      const pattern: Array<'dot' | 'dash' | 'gap'> = ['dot', 'dot', 'dot', 'gap', 'dash', 'dash', 'dash', 'gap', 'dot', 'dot', 'dot']
+      for (const p of pattern) {
+        if (p === 'gap') {
+          at += dash - dot // letter gap: 3 units minus the trailing unit
+          continue
+        }
+        const len = p === 'dot' ? dot : dash
+        synth.triggerAttackRelease(f, len, at)
+        at += len + dot
+      }
+    },
+    dispose: () => synth.dispose(),
+  }
+}
+
+/** ゴング — セッション・監視の開始。低く長い減衰（bell の短く明るい減衰と対）。汎用ゴングとして合成 */
+export const gong: OneShotFactory = ({ out }) => {
+  const delay = new Tone.FeedbackDelay({ delayTime: 0.25, feedback: 0.2, wet: 0.15 }).connect(out)
+  const synth = new Tone.MetalSynth({
+    harmonicity: 1.4,
+    modulationIndex: 16,
+    resonance: 300,
+    octaves: 1.5,
+    envelope: { attack: 0.01, decay: 2.5, release: 3 },
+    volume: -10,
+  }).connect(delay)
+  return {
+    play({ transpose = 0, velocity = 0.9, time = Tone.now() }: OneShotOptions = {}) {
+      synth.triggerAttackRelease(semis('D2', transpose), 3, time, velocity)
+    },
+    dispose() {
+      synth.dispose()
+      delay.dispose()
+    },
+  }
+}
+
+/** ガラス割れ — 清算実行・損失確定。非周期の高域粒子。取り返しがつかない音 */
+export const glassBreak: OneShotFactory = ({ out }) => {
+  const hp = new Tone.Filter(2500, 'highpass').connect(out)
+  const noise = new Tone.NoiseSynth({
+    noise: { type: 'white' },
+    envelope: { attack: 0.001, decay: 0.25, sustain: 0, release: 0.1 },
+    volume: -10,
+  }).connect(hp)
+  const shards = new Tone.MetalSynth({
+    harmonicity: 8,
+    modulationIndex: 30,
+    resonance: 6000,
+    octaves: 1,
+    envelope: { attack: 0.001, decay: 0.12, release: 0.05 },
+    volume: -20,
+  }).connect(out)
+  const offsets = [0.01, 0.04, 0.09, 0.13, 0.2]
+  const notes = ['A6', 'C7', 'E7', 'G6', 'B6']
+  return {
+    play({ transpose = 0, time = Tone.now() }: OneShotOptions = {}) {
+      noise.triggerAttackRelease(0.25, time)
+      offsets.forEach((o, k) => shards.triggerAttackRelease(semis(notes[k]!, transpose), 0.08, time + o, 0.5))
+    },
+    dispose() {
+      noise.dispose()
+      shards.dispose()
+      hp.dispose()
+    },
+  }
+}
+
+/** 電源断 — 監視停止。600→80 Hz の下降スイープ、同時にフィルタが閉じる（coin の上昇 2 音の鏡像） */
+export const powerDown: OneShotFactory = ({ out }) => {
+  const lp = new Tone.Filter(3000, 'lowpass').connect(out)
+  const synth = new Tone.Synth({
+    oscillator: { type: 'sawtooth' },
+    envelope: { attack: 0.01, decay: 0.1, sustain: 0.8, release: 0.2 },
+    volume: -14,
+  }).connect(lp)
+  return {
+    play({ transpose = 0, time = Tone.now() }: OneShotOptions = {}) {
+      const from = semis('D5', transpose)
+      synth.triggerAttack(from, time)
+      synth.frequency.setValueAtTime(from, time)
+      synth.frequency.exponentialRampToValueAtTime(from / 7.5, time + 0.8)
+      lp.frequency.setValueAtTime(3000, time)
+      lp.frequency.exponentialRampToValueAtTime(200, time + 0.8)
+      synth.triggerRelease(time + 0.8)
+    },
+    dispose() {
+      synth.dispose()
+      lp.dispose()
+    },
+  }
+}
+
+/** 無線スケルチ — 接続復帰（knock の対）。40 ms のノイズにフィルタを素早く開く */
+export const squelch: OneShotFactory = ({ out }) => {
+  const bp = new Tone.Filter({ frequency: 1800, type: 'bandpass', Q: 1 }).connect(out)
+  const noise = new Tone.NoiseSynth({
+    noise: { type: 'white' },
+    envelope: { attack: 0.001, decay: 0.04, sustain: 0, release: 0.01 },
+    volume: -12,
+  }).connect(bp)
+  return {
+    play({ time = Tone.now() }: OneShotOptions = {}) {
+      bp.frequency.setValueAtTime(600, time)
+      bp.frequency.exponentialRampToValueAtTime(3500, time + 0.04)
+      noise.triggerAttackRelease(0.04, time)
+    },
+    dispose() {
+      noise.dispose()
+      bp.dispose()
+    },
+  }
+}
+
+/** 水滴 — 小額イベント・部分約定。控えめで頻発に耐える。短いピッチ上昇 + 小さなエコー */
+export const waterDrop: OneShotFactory = ({ out }) => {
+  const delay = new Tone.FeedbackDelay({ delayTime: 0.18, feedback: 0.25, wet: 0.25 }).connect(out)
+  const synth = new Tone.Synth({
+    oscillator: { type: 'sine' },
+    envelope: { attack: 0.002, decay: 0.12, sustain: 0, release: 0.1 },
+    volume: -12,
+  }).connect(delay)
+  return {
+    play({ transpose = 0, time = Tone.now() }: OneShotOptions = {}) {
+      const f = semis('E5', transpose)
+      synth.triggerAttackRelease(f, 0.08, time)
+      synth.frequency.setValueAtTime(f, time)
+      synth.frequency.exponentialRampToValueAtTime(f * 2, time + 0.03)
+    },
+    dispose() {
+      synth.dispose()
+      delay.dispose()
+    },
+  }
+}
+
+/** ラッチのカチッ — 注文確定・設定反映。極短の非トーナル打撃 */
+export const latchClick: OneShotFactory = ({ out }) => {
+  const body = new Tone.MembraneSynth({
+    pitchDecay: 0.002,
+    octaves: 0.5,
+    envelope: { attack: 0.001, decay: 0.02, sustain: 0, release: 0.01 },
+    volume: -8,
+  }).connect(out)
+  const tip = new Tone.MetalSynth({
+    harmonicity: 5,
+    modulationIndex: 20,
+    resonance: 4000,
+    octaves: 0.5,
+    envelope: { attack: 0.001, decay: 0.015, release: 0.005 },
+    volume: -26,
+  }).connect(out)
+  return {
+    play({ transpose = 0, time = Tone.now() }: OneShotOptions = {}) {
+      body.triggerAttackRelease('G3', 0.02, time)
+      tip.triggerAttackRelease(semis('C7', transpose), 0.01, time + 0.004, 0.7)
+    },
+    dispose() {
+      body.dispose()
+      tip.dispose()
+    },
+  }
+}
+
 // ================================================================ registry
 
 export const continuous = {
@@ -335,6 +698,13 @@ export const continuous = {
   countdown,
   hiLoSiren,
   redAlert,
+  stallWarning,
+  rwrLock,
+  spo2Pulse,
+  laneDeparture,
+  foghorn,
+  kettle,
+  tickingClock,
 } satisfies Record<string, ContinuousFactory>
 
 export const oneShot = {
@@ -345,6 +715,13 @@ export const oneShot = {
   allClear,
   buzzer,
   chime,
+  sosMorse,
+  gong,
+  glassBreak,
+  powerDown,
+  squelch,
+  waterDrop,
+  latchClick,
 } satisfies Record<string, OneShotFactory>
 
 export type ContinuousPresetId = keyof typeof continuous

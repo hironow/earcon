@@ -29,6 +29,17 @@ export class FakeSignal {
     this.calls.push({ node: this.owner, method: `${this.name}.linearRampTo`, args: [v, t] })
     this.value = v
   }
+  exponentialRampToValueAtTime(v: number, t: number) {
+    this.calls.push({ node: this.owner, method: `${this.name}.exponentialRampToValueAtTime`, args: [v, t] })
+    this.value = v
+  }
+  linearRampToValueAtTime(v: number, t: number) {
+    this.calls.push({ node: this.owner, method: `${this.name}.linearRampToValueAtTime`, args: [v, t] })
+    this.value = v
+  }
+  cancelScheduledValues(t: number) {
+    this.calls.push({ node: this.owner, method: `${this.name}.cancelScheduledValues`, args: [t] })
+  }
 }
 
 export class FakeNode {
@@ -42,6 +53,10 @@ export class FakeNode {
   frequency: FakeSignal
   gain: FakeSignal
   pan: FakeSignal
+  detune: FakeSignal
+  depth: FakeSignal
+  amplitude: FakeSignal
+  modulationIndex: FakeSignal
   kind: string
   options: unknown
   constructor(kind: string, options?: unknown) {
@@ -51,6 +66,10 @@ export class FakeNode {
     this.frequency = new FakeSignal(0, kind, 'frequency')
     this.gain = new FakeSignal(1, kind, 'gain')
     this.pan = new FakeSignal(0, kind, 'pan')
+    this.detune = new FakeSignal(0, kind, 'detune')
+    this.depth = new FakeSignal(0, kind, 'depth')
+    this.amplitude = new FakeSignal(1, kind, 'amplitude')
+    this.modulationIndex = new FakeSignal(1, kind, 'modulationIndex')
     FakeNode.live.add(this)
     FakeNode.all.push(this)
   }
@@ -173,6 +192,13 @@ export const fakeTone = {
     }
   },
   FeedbackDelay: nodeClass('FeedbackDelay'),
+  Tremolo: class extends FakeNode {
+    constructor(options?: { frequency?: number; depth?: number }) {
+      super('Tremolo', options)
+      this.frequency.value = options?.frequency ?? 10
+      this.depth.value = options?.depth ?? 0.5
+    }
+  },
   Synth: nodeClass('Synth'),
   FMSynth: nodeClass('FMSynth'),
   AMSynth: nodeClass('AMSynth'),

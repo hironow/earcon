@@ -55,7 +55,7 @@ test('(2) every preset survives start/set/stop/dispose and play/dispose without 
     return { failures, contextState: Tone.getContext().state, count: Object.keys(continuous).length + Object.keys(oneShot).length }
   })
   expect(result.failures).toEqual([])
-  expect(result.count).toBe(14)
+  expect(result.count).toBe(28)
   expect(result.contextState).toBe('running')
   expect(errors).toEqual([])
 })

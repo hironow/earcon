@@ -247,9 +247,9 @@ export function Simulator() {
               <tbody>
                 {draft.levels.map((l, i) => (
                   <tr key={i}>
-                    <td><input className="num" style={{ width: 90, textAlign: 'left' }} value={l.id} onChange={(e) => setDraft(editLevel(draft, i, { id: e.target.value }))} /></td>
-                    <td><input className="num" type="number" step={0.001} value={l.enter} onChange={(e) => setDraft(editLevel(draft, i, { enter: Number(e.target.value) }))} /></td>
-                    <td><input className="num" type="number" step={0.001} value={l.exit} onChange={(e) => setDraft(editLevel(draft, i, { exit: Number(e.target.value) }))} /></td>
+                    <td><input className="num" style={{ width: 90, textAlign: 'left' }} value={l.id} aria-label={`Level ${i + 1} の id`} onChange={(e) => setDraft(editLevel(draft, i, { id: e.target.value }))} /></td>
+                    <td><input className="num" type="number" step={0.001} value={l.enter} aria-label={`${l.id || `Level ${i + 1}`} の enter`} onChange={(e) => setDraft(editLevel(draft, i, { enter: Number(e.target.value) }))} /></td>
+                    <td><input className="num" type="number" step={0.001} value={l.exit} aria-label={`${l.id || `Level ${i + 1}`} の exit`} onChange={(e) => setDraft(editLevel(draft, i, { exit: Number(e.target.value) }))} /></td>
                     <td><button className="link" onClick={() => setDraft({ ...draft, levels: draft.levels.filter((_, j) => j !== i) })}>削除</button></td>
                   </tr>
                 ))}
@@ -269,6 +269,7 @@ export function Simulator() {
             </label>
             {draft.urgency.mode === 'eta' && (
               <>
+                <p className="config__hint">eventAt は「値」の単位（清算なら距離 0）。時刻ではない。ETA はそこへ到達するまでの秒数。</p>
                 <label className="field">
                   <span className="field__label">eventAt</span>
                   <input className="num" type="number" step={0.01} value={draft.urgency.eventAt}
@@ -316,8 +317,12 @@ function levelErrors(cfg: SimConfig): string[] {
     .filter((l) => !(sign * l.exit < sign * l.enter))
     .map((l) => `${l.id || '(id なし)'}: exit (${l.exit}) は enter (${l.enter}) より${cfg.direction === 'decreasing' ? '大きく' : '小さく'}する`)
   if (cfg.levels.length === 0) errors.push('Level が 1 つも無い')
-  const ids = cfg.levels.map((l) => l.id)
+  const ids = cfg.levels.map((l) => l.id.trim())
+  if (ids.some((id) => id === '')) errors.push('id が空の Level がある')
   if (new Set(ids).size !== ids.length) errors.push('id が重複している')
+  if (cfg.levels.some((l) => !Number.isFinite(l.enter) || !Number.isFinite(l.exit))) errors.push('enter / exit に数値でないものがある')
+  if (cfg.urgency.mode === 'eta' && !((cfg.urgency.horizonSec ?? 300) > 1)) errors.push('horizonSec は 1 より大きくする（log10 スケール）')
+  if (!(cfg.staleAfterMs >= 0)) errors.push('staleAfterMs は 0 以上（0 で watchdog 無効）')
   for (let i = 1; i < cfg.levels.length; i++) {
     if (!(sign * cfg.levels[i]!.enter > sign * cfg.levels[i - 1]!.enter)) {
       errors.push(`${cfg.levels[i]!.id}: enter は ${cfg.levels[i - 1]!.id} より危険側（${cfg.direction === 'decreasing' ? '小さく' : '大きく'}）する`)

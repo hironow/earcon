@@ -84,10 +84,13 @@ function ContinuousRow({ id, metaphor, use, engine, bus, locked }: RowProps) {
   const ledColor = intensity < 0.4 ? 'var(--watch)' : intensity < 0.75 ? 'var(--warn)' : 'var(--critical)'
 
   const toggle = () => {
-    if (!sound.current) return
-    if (playing) sound.current.stop()
-    else sound.current.start(intensity)
-    setPlaying(!playing)
+    const s = sound.current
+    if (!s) return
+    setPlaying((was) => {
+      if (was) s.stop()
+      else s.start(intensity)
+      return !was
+    })
   }
 
   return (

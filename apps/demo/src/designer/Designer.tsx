@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import type { Bus, ContinuousSound, Engine, EngineStatus, OneShotSound, SynthSpec } from '@earcon/core'
+import { validateSynthSpec, type Bus, type ContinuousSound, type Engine, type EngineStatus, type OneShotSound, type SynthSpec } from '@earcon/core'
 import { assignSound, useAssignments } from '../sound-assignments'
 import { deleteSpec, downloadSpec, listSaved, saveSpec, type SavedSpec } from './storage'
 import sonarSpec from '../../../../packages/engine-tone/specs/sonar.json'
@@ -66,13 +66,15 @@ export function Designer({ engine, status }: Props) {
       bus.current = null
     }
   }, [engine])
+  const specErrors = validateSynthSpec(spec)
   useEffect(() => {
     sound.current?.dispose()
     sound.current = null
     setPlaying(false)
-    if (!bus.current) return
+    if (!bus.current || specErrors.length) return
     try {
       sound.current = spec.mode === 'continuous' ? engine.createContinuous(spec, bus.current) : engine.createOneShot(spec, bus.current)
+      setJsonError(null)
     } catch (e) {
       setJsonError((e as Error).message)
     }
@@ -88,21 +90,32 @@ export function Designer({ engine, status }: Props) {
   const togglePreview = () => {
     const s = sound.current as ContinuousSound | null
     if (!s) return
-    if (playing) s.stop()
-    else s.start(intensity)
-    setPlaying(!playing)
+    setPlaying((was) => {
+      if (was) s.stop()
+      else s.start(intensity)
+      return !was
+    })
   }
 
   const loadJson = () => {
+    let parsed: unknown
     try {
-      const parsed = JSON.parse(jsonText) as SynthSpec
-      if (parsed.kind !== 'synth') throw new Error('kind は "synth" である必要がある')
-      setSpec(parsed)
-      setJsonError(null)
+      parsed = JSON.parse(jsonText)
     } catch (e) {
-      setJsonError((e as Error).message)
+      setJsonError(`JSON として読めない: ${(e as Error).message}`)
+      return
     }
+    const errors = validateSynthSpec(parsed)
+    if (errors.length) {
+      setJsonError(errors.join('\n'))
+      return
+    }
+    setSpec(parsed as SynthSpec)
+    setJsonError(null)
   }
+
+  const cleanName = name.trim().replace(/[\\/:*?"<>|]/g, '-').slice(0, 40)
+  const nameError = cleanName.length === 0 ? '名前を入れる（空白だけは不可）' : null
 
   return (
     <>
@@ -261,7 +274,7 @@ export function Designer({ engine, status }: Props) {
             <div className="config">
               {spec.mode === 'continuous' ? (
                 <div className="drivers__manual">
-                  <button className={`btn${playing ? ' btn--armed' : ''}`} aria-pressed={playing} disabled={locked} onClick={togglePreview} data-testid="dz-toggle">
+                  <button className={`btn${playing ? ' btn--armed' : ''}`} aria-pressed={playing} disabled={locked || specErrors.length > 0} onClick={togglePreview} data-testid="dz-toggle">
                     {playing ? '停止' : '開始'}
                   </button>
                   <label className="field">
@@ -272,11 +285,18 @@ export function Designer({ engine, status }: Props) {
                   </label>
                 </div>
               ) : (
-                <button className="btn" disabled={locked} onClick={() => (sound.current as OneShotSound | null)?.play()} data-testid="dz-play">
+                <button className="btn" disabled={locked || specErrors.length > 0} onClick={() => (sound.current as OneShotSound | null)?.play()} data-testid="dz-play">
                   再生
                 </button>
               )}
               <button className="link" onClick={() => setRev((r) => r + 1)}>音を作り直す</button>
+              {specErrors.length > 0 && (
+                <ul className="config__errors" data-testid="dz-spec-errors">
+                  {specErrors.map((e) => (
+                    <li key={e}>{e}</li>
+                  ))}
+                </ul>
+              )}
             </div>
           </section>
 
@@ -289,7 +309,7 @@ export function Designer({ engine, status }: Props) {
             </div>
             <div className="config">
               <textarea className="json" value={jsonText} onChange={(e) => setJsonText(e.target.value)} spellCheck={false} data-testid="dz-json" />
-              {jsonError && <p className="config__hint" style={{ color: 'var(--critical)' }}>{jsonError}</p>}
+              {jsonError && <pre className="config__errors" style={{ whiteSpace: 'pre-wrap', paddingLeft: 0, listStyle: 'none' }} data-testid="dz-json-error">{jsonError}</pre>}
               <div className="config__actions">
                 <button className="btn" onClick={loadJson}>読み込む</button>
                 <button className="btn" onClick={() => void navigator.clipboard?.writeText(jsonText)}>コピー</button>
@@ -309,9 +329,10 @@ export function Designer({ engine, status }: Props) {
                 <span className="field__label">name</span>
                 <input className="num" style={{ width: 160, textAlign: 'left' }} value={name} onChange={(e) => setName(e.target.value)} data-testid="dz-name" />
               </label>
+              {nameError && <p className="config__errors" style={{ paddingLeft: 0, listStyle: 'none' }}>{nameError}</p>}
               <div className="config__actions">
-                <button className="btn btn--primary" onClick={() => setSaved(saveSpec(name, spec))} data-testid="dz-save">保存</button>
-                <button className="btn" style={{ textTransform: 'none' }} onClick={() => downloadSpec(name, spec)}>specs/{name || 'sound'}.json を書き出す</button>
+                <button className="btn btn--primary" disabled={!!nameError || specErrors.length > 0} onClick={() => setSaved(saveSpec(cleanName, spec))} data-testid="dz-save">保存</button>
+                <button className="btn" style={{ textTransform: 'none' }} disabled={!!nameError || specErrors.length > 0} onClick={() => downloadSpec(cleanName, spec)}>specs/{cleanName || 'sound'}.json を書き出す</button>
               </div>
               {saved.length > 0 && (
                 <ul className="saved" data-testid="dz-saved">
@@ -337,7 +358,7 @@ export function Designer({ engine, status }: Props) {
             <div className="config">
               <div className="config__actions">
                 {LEVELS.map((l) => (
-                  <button key={l} className="btn" disabled={spec.mode !== 'continuous'} onClick={() => assignSound(l, spec)} data-testid={`assign-${l}`}>
+                  <button key={l} className="btn" disabled={spec.mode !== 'continuous' || specErrors.length > 0} onClick={() => assignSound(l, spec)} data-testid={`assign-${l}`}>
                     → {l}
                   </button>
                 ))}

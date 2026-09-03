@@ -53,7 +53,7 @@ export function Wallets({ policy, onPolicy }: Props) {
             <button className="btn" aria-pressed={policy.mode === 'top-n'} onClick={() => onPolicy({ mode: 'top-n', n: topN })} data-testid="policy-top">top-n</button>
             <label className="field">
               <span className="field__label">n</span>
-              <input className="num" type="number" min={1} max={N} value={topN} disabled={policy.mode !== 'top-n'} onChange={(e) => onPolicy({ mode: 'top-n', n: Math.max(1, Number(e.target.value) || 1) })} />
+              <input className="num" type="number" min={1} max={N} value={topN} disabled={policy.mode !== 'top-n'} onChange={(e) => onPolicy({ mode: 'top-n', n: Math.min(N, Math.max(1, Math.floor(Number(e.target.value)) || 1)) })} />
             </label>
           </div>
           <div className="drivers__manual">

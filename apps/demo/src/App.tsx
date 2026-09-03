@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { ArbiterPolicy } from '@earcon/core'
 import { NotifierProvider, UnlockGate, useToneNotifier } from '@earcon/react'
 import { Auditioner } from './auditioner/Auditioner'
+import { ErrorBoundary } from './ErrorBoundary'
 import { Designer } from './designer/Designer'
 import { engine } from './engine'
 import { Simulator } from './simulator/Simulator'
@@ -111,10 +112,12 @@ function Shell({ policy, onPolicy }: { policy: ArbiterPolicy; onPolicy: (p: Arbi
       </nav>
 
       <main className="rack">
-        {tab === 'auditioner' && <Auditioner engine={engine} status={notifier.status} />}
-        {tab === 'simulator' && <Simulator />}
-        {tab === 'designer' && <Designer engine={engine} status={notifier.status} />}
-        {tab === 'wallets' && <Wallets policy={policy} onPolicy={onPolicy} />}
+        <ErrorBoundary key={tab} label={TABS.find((t) => t.id === tab)?.label ?? tab}>
+          {tab === 'auditioner' && <Auditioner engine={engine} status={notifier.status} />}
+          {tab === 'simulator' && <Simulator />}
+          {tab === 'designer' && <Designer engine={engine} status={notifier.status} />}
+          {tab === 'wallets' && <Wallets policy={policy} onPolicy={onPolicy} />}
+        </ErrorBoundary>
       </main>
     </>
   )

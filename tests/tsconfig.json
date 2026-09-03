@@ -1,5 +1,6 @@
 {
   "extends": "../tsconfig.base.json",
   "compilerOptions": { "outDir": ".tsbuild", "rootDir": ".", "types": ["bun"] },
-  "include": ["utils"]
+  "include": ["utils"],
+  "references": [{ "path": "../packages/core" }]
 }

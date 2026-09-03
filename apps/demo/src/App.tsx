@@ -1,9 +1,11 @@
 import { useState } from 'react'
+import type { ArbiterPolicy } from '@earcon/core'
 import { NotifierProvider, UnlockGate, useToneNotifier } from '@earcon/react'
 import { Auditioner } from './auditioner/Auditioner'
 import { Designer } from './designer/Designer'
 import { engine } from './engine'
 import { Simulator } from './simulator/Simulator'
+import { Wallets } from './wallets/Wallets'
 
 type Tab = 'auditioner' | 'simulator' | 'designer' | 'wallets'
 
@@ -11,7 +13,7 @@ const TABS: Array<{ id: Tab; label: string; ready: boolean }> = [
   { id: 'auditioner', label: 'Preset Auditioner', ready: true },
   { id: 'simulator', label: 'Monitor Simulator', ready: true },
   { id: 'designer', label: 'Sound Designer', ready: true },
-  { id: 'wallets', label: 'Wallets', ready: false },
+  { id: 'wallets', label: 'Wallets', ready: true },
 ]
 
 const STATUS_LABEL: Record<string, string> = {
@@ -22,14 +24,15 @@ const STATUS_LABEL: Record<string, string> = {
 }
 
 export function App() {
+  const [policy, setPolicy] = useState<ArbiterPolicy>({ mode: 'worst-only' })
   return (
-    <NotifierProvider engine={engine} policy={{ mode: 'worst-only' }}>
-      <Shell />
+    <NotifierProvider engine={engine} policy={policy}>
+      <Shell policy={policy} onPolicy={setPolicy} />
     </NotifierProvider>
   )
 }
 
-function Shell() {
+function Shell({ policy, onPolicy }: { policy: ArbiterPolicy; onPolicy: (p: ArbiterPolicy) => void }) {
   const notifier = useToneNotifier()
   const [tab, setTab] = useState<Tab>('auditioner')
   const [masterDb, setMasterDb] = useState(-6)
@@ -111,7 +114,7 @@ function Shell() {
         {tab === 'auditioner' && <Auditioner engine={engine} status={notifier.status} />}
         {tab === 'simulator' && <Simulator />}
         {tab === 'designer' && <Designer engine={engine} status={notifier.status} />}
-        {tab === 'wallets' && <p className="placeholder">この区画はまだ空です。</p>}
+        {tab === 'wallets' && <Wallets policy={policy} onPolicy={onPolicy} />}
       </main>
     </>
   )

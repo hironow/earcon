@@ -59,6 +59,13 @@ without pitch, linear/exp rate, pitch at intensity, pattern offsets, defaults; t
 One test: twin preview (continuous + oneShot), JSON edit → load, save to
 localStorage, assign to `warn`, Simulator enters warn with the assigned sound.
 
+## §8 M5 arbiter and background tab (`tests/e2e/wallets.e2e.ts`, `background.e2e.ts`)
+
+`wallets`: eight monitors in critical → worst-only starts exactly `w1`, all starts
+all eight, top-n (2) starts `w1, w2`, acknowledging `w1` hands the slot to `w2` —
+read from the engine layer. `background`: with the tab hidden for 90 s the 1 Hz
+engine clock ticks 80–100 times and stale wallets went stale.
+
 ## §8 M3 simulator scenarios (`tests/e2e/simulator.e2e.ts`)
 
 `whipsaw`, `crash`, `slow-approach`, `stale` each have one test; the manual slider

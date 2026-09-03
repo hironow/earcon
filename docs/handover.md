@@ -1,6 +1,6 @@
 # Handover
 
-**Last updated:** 2026-09-04 05:20 (JST)
+**Last updated:** 2026-09-04 06:00 (JST)
 **Updated by:** Claude Code session (earcon M0)
 
 ## Current State
@@ -49,6 +49,11 @@ Nothing in flight. Next milestone is M4.
   (happy-dom preload); root `bunfig.toml` is not inherited.
 - The demo exposes `window.__earcon` (dev only) for Playwright; `ticker()` sounds
   expose `.clock` for the parkingSensor rate assertion.
+- `tests/e2e/background.e2e.ts` runs only in the `background` Playwright project
+  (`bunx playwright test --project=background`, ~100 s). `just test-e2e` runs both
+  projects.
+- `apps/demo/src/debug.ts` wraps `engine.createContinuous` in dev so e2e can read
+  which buses have a started continuous sound (`window.__earcon.activeContinuous()`).
 - Demo-wide level → sound assignments live in `apps/demo/src/sound-assignments.ts`;
   the Simulator folds the assigned level ids into its monitor id so `useMonitor`
   recreates the monitor (it ignores non-id option changes by design).

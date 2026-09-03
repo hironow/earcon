@@ -794,3 +794,85 @@ select {
     grid-template-columns: 1fr;
   }
 }
+
+/* ---------------------------------------------------------------- wallets */
+
+.wallets {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: calc(var(--u) * 2);
+  margin-bottom: calc(var(--u) * 4);
+}
+
+.wallet {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  border: 1px solid var(--rule);
+  border-left: 3px solid var(--level-color);
+  border-radius: 6px;
+  background: var(--panel);
+}
+
+.wallet__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.wallet__head .row__rate {
+  flex: 1;
+  text-align: left;
+}
+
+.wallet__audible {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--led-off);
+}
+
+.wallet__audible--on {
+  background: var(--level-color);
+  box-shadow: 0 0 8px var(--level-color);
+}
+
+.wallet__level {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--level-color);
+}
+
+.wallet__meta {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+
+.wallet__controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.steps {
+  margin: 0;
+  padding-left: 20px;
+  color: var(--ink-muted);
+}
+
+.steps li {
+  margin: 4px 0;
+}
+
+@media (max-width: 900px) {
+  .wallets {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

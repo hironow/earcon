@@ -1,34 +1,37 @@
 # Handover
 
-**Last updated:** 2026-09-04 02:30 (JST)
+**Last updated:** 2026-09-04 03:40 (JST)
 **Updated by:** Claude Code session (earcon M0)
 
 ## Current State
 
-M0 scaffold is done: bun workspace with `@earcon/core`, `@earcon/engine-tone`,
-`@earcon/react` (empty `export {}`), `apps/demo` (Vite, placeholder page), justfile,
-project references (`tsc -b`), Semgrep purity rule + bun test twin (T20), changesets
-(`fixed` group), CI workflow file. `just build`, `just lint`, `just test`,
-`just publish-dry` all pass locally.
+M0 (scaffold), M1 (`@earcon/core`: T1–T20 green, 100% coverage) and M2
+(`@earcon/engine-tone`: presets, catalog, `createToneEngine`; demo Preset
+Auditioner; Playwright §4.5 + §9 leak check green) are done and committed on `main`.
+`just check` and `just test-e2e` pass locally.
 
 ## In Progress
 
-Nothing in flight. Next milestone is M1.
+Nothing in flight. Next milestone is M3.
 
 ## Next Actions
 
-1. M1 `@earcon/core`: `createMonitor` (T1–T17) and `selectAudible` (T18–T19), TDD,
-   coverage gate via `just test-core`
-2. M2 `@earcon/engine-tone`: presets from the spec appendix, `createToneEngine`,
-   Preset Auditioner in the demo, Playwright §4.5 + leak check
-3. M3 `@earcon/react`, M4 `fromSpec` + Sound Designer, M5 Arbiter + Wallets +
-   background-tab test, M6 README / API docs / changeset (no publish)
+1. M3 `@earcon/react`: `NotifierProvider`, `useMonitor`, `useToneNotifier`,
+   `UnlockGate`, §5.4 wiring as engine-only pure functions (`wiring.ts`), §5.5 tests
+   with a mock engine + happy-dom; Monitor Simulator tab in the demo
+2. M4 `fromSpec` (replace the stub in `packages/engine-tone/src/fromSpec.ts`),
+   `specs/*.json` for sonar/parkingSensor/heartbeat/coin/chime/knock, Sound Designer tab
+3. M5 Arbiter wiring, Wallets tab, `tests/e2e/background.e2e.ts` (90 s hidden tab)
+4. M6 README Quick start, `docs/api.md`, first changeset (no publish, no deploy)
 
 ## Known Risks / Blockers
 
 - `.github/workflows/ci.yaml` has never run (no remote). Verify on first push.
 - `bun publish` needs npm login and the `@earcon` org; deferred until a remote exists.
-- Playwright Chromium is not installed yet (`bunx playwright install chromium`).
+- One-shot presets use monophonic Tone synths; the engine spaces same-instant
+  `play()` calls by 10 ms (`MIN_ONESHOT_GAP_SEC`) so they do not throw.
+- The §9 leak check compares JS heap after forced GC (`--expose-gc`); Tone exposes
+  no node count. Threshold 4 MB growth between cycle 10 and 50.
 
 ## Context the Next Actor Needs
 
@@ -40,6 +43,12 @@ Nothing in flight. Next milestone is M1.
 - `just semgrep` runs the local `semgrep` binary (not `bunx`); CI installs it with
   `uv tool install semgrep`.
 - `changeset init` is interactive; the config was written by hand.
+- `bun test` from a package directory needs that package's own `bunfig.toml`
+  (happy-dom preload); root `bunfig.toml` is not inherited.
+- The demo exposes `window.__earcon` (dev only) for Playwright; `ticker()` sounds
+  expose `.clock` for the parkingSensor rate assertion.
+- Design tokens for the demo live in `apps/demo/src/styles.css`; the rate LED per
+  row is the one signature element (blinks at the mapped Hz from `presetRate`).
 
 ## Relevant Files and Commands
 

@@ -122,7 +122,7 @@ just install
 just dev        # http://localhost:5173
 ```
 
-Four sections: Preset Auditioner, Monitor Simulator (scenarios: slow approach, crash, whipsaw, stale), Sound Designer (build a `SynthSpec`, save, export, assign to a level) and Wallets (eight monitors, switch the arbiter policy, try the background-tab procedure).
+Four sections: Preset Auditioner, Monitor Simulator (scenarios: slow approach, crash, whipsaw, stale), Sound Designer (build a `SynthSpec`, save, export, assign to a level) and Wallets (eight monitors, switch the arbiter policy, try the background-tab procedure). Works on phones, foldables and tablets (44 px touch targets, safe-area aware, hinge-aware on dual-screen devices).
 
 ## API
 

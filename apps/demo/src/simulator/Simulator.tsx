@@ -240,6 +240,7 @@ export function Simulator() {
               </select>
             </label>
 
+            <div className="levels-scroll">
             <table className="levels">
               <thead>
                 <tr><th>id</th><th>enter</th><th>exit</th><th /></tr>
@@ -255,6 +256,7 @@ export function Simulator() {
                 ))}
               </tbody>
             </table>
+            </div>
             <button className="btn" onClick={() => setDraft({ ...draft, levels: [...draft.levels, { id: `level${draft.levels.length + 1}`, enter: 0.01, exit: 0.015 }] })}>
               Level を追加
             </button>

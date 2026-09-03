@@ -199,8 +199,10 @@ export function Designer({ engine, status }: Props) {
               </label>
               <label className="field">
                 <span className="field__label">delay</span>
-                <input type="checkbox" checked={!!spec.fx?.delay}
-                  onChange={(e) => patch({ fx: { ...spec.fx, delay: e.target.checked ? { time: 0.3, feedback: 0.4, wet: 0.3 } : undefined } })} />
+                <button type="button" className="btn" aria-pressed={!!spec.fx?.delay}
+                  onClick={() => patch({ fx: { ...spec.fx, delay: spec.fx?.delay ? undefined : { time: 0.3, feedback: 0.4, wet: 0.3 } } })}>
+                  {spec.fx?.delay ? 'あり' : 'なし'}
+                </button>
                 {spec.fx?.delay && (
                   <>
                     {(['time', 'feedback', 'wet'] as const).map((k) => (
@@ -388,6 +390,7 @@ function RowTable({ title, columns, rows, onChange, blank }: { title: string; co
   return (
     <fieldset className="fieldset">
       <legend className="field__label">{title}</legend>
+      <div className="levels-scroll">
       <table className="levels">
         <thead>
           <tr>
@@ -411,6 +414,7 @@ function RowTable({ title, columns, rows, onChange, blank }: { title: string; co
           ))}
         </tbody>
       </table>
+      </div>
       <button className="btn" onClick={() => onChange([...rows, [...blank]])}>行を追加</button>
     </fieldset>
   )

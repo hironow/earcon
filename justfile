@@ -9,9 +9,11 @@ default:
 install:
     bun install
 
-# Build the three publishable packages (ESM + d.ts via tsdown)
+# Build the three publishable packages (ESM + d.ts via tsdown), then prove the
+# engine-tone main entry does not import tone statically (spec §4.1)
 build:
     bun run --filter './packages/*' build
+    bun run scripts/check-lazy-tone.ts
 
 # Unit tests for every workspace (bun:test)
 test:

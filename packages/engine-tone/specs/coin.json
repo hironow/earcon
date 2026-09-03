@@ -1,0 +1,12 @@
+{
+  "kind": "synth",
+  "mode": "oneShot",
+  "voice": "synth",
+  "oscillator": "triangle",
+  "envelope": { "attack": 0.002, "decay": 0.15, "sustain": 0.15, "release": 0.2 },
+  "volume": -8,
+  "notes": [
+    { "note": "C6", "at": 0, "dur": 0.07 },
+    { "note": "G6", "at": 0.08, "dur": 0.25 }
+  ]
+}

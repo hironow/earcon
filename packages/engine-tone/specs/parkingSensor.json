@@ -1,0 +1,11 @@
+{
+  "kind": "synth",
+  "mode": "continuous",
+  "voice": "synth",
+  "oscillator": "square",
+  "envelope": { "attack": 0.002, "decay": 0.05, "sustain": 0.3, "release": 0.03 },
+  "volume": -10,
+  "rate": { "minHz": 1.1111, "maxHz": 11.1111 },
+  "pitch": { "base": "C6", "semitonesAtMax": 0 },
+  "pattern": [{ "offset": 0, "dur": 0.045 }]
+}

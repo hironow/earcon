@@ -1,0 +1,13 @@
+{
+  "kind": "synth",
+  "mode": "continuous",
+  "voice": "membrane",
+  "envelope": { "attack": 0.001, "decay": 0.25, "sustain": 0, "release": 0.1 },
+  "volume": -4,
+  "rate": { "minHz": 0.9167, "maxHz": 2.8333 },
+  "pitch": { "base": "A1", "semitonesAtMax": 0 },
+  "pattern": [
+    { "offset": 0, "note": "A1", "dur": 0.12 },
+    { "offset": 0.16, "note": "G1", "dur": 0.1 }
+  ]
+}

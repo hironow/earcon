@@ -1,0 +1,11 @@
+{
+  "kind": "synth",
+  "mode": "oneShot",
+  "voice": "membrane",
+  "envelope": { "attack": 0.001, "decay": 0.15, "sustain": 0, "release": 0.05 },
+  "volume": -4,
+  "notes": [
+    { "note": "E2", "at": 0, "dur": 0.1 },
+    { "note": "E2", "at": 0.18, "dur": 0.1 }
+  ]
+}

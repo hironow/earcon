@@ -1,0 +1,12 @@
+{
+  "kind": "synth",
+  "mode": "oneShot",
+  "voice": "synth",
+  "oscillator": "sine",
+  "envelope": { "attack": 0.005, "decay": 0.6, "sustain": 0, "release": 0.4 },
+  "volume": -8,
+  "notes": [
+    { "note": "E5", "at": 0, "dur": 0.4 },
+    { "note": "C5", "at": 0.35, "dur": 0.6 }
+  ]
+}

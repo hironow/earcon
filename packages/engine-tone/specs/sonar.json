@@ -1,0 +1,12 @@
+{
+  "kind": "synth",
+  "mode": "continuous",
+  "voice": "fm",
+  "oscillator": "sine",
+  "envelope": { "attack": 0.005, "decay": 0.7, "sustain": 0, "release": 0.3 },
+  "volume": -6,
+  "fx": { "delay": { "time": 0.4, "feedback": 0.45, "wet": 0.45 } },
+  "rate": { "minHz": 0.3333, "maxHz": 1.4286 },
+  "pitch": { "base": "A5", "semitonesAtMax": 5 },
+  "pattern": [{ "offset": 0, "dur": 0.25 }]
+}

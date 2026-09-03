@@ -50,6 +50,7 @@ export function Simulator() {
   const [draft, setDraft] = useState<SimConfig>(DEFAULT_CONFIG)
   const [applied, setApplied] = useState<{ config: SimConfig; rev: number }>({ config: DEFAULT_CONFIG, rev: 0 })
   const dirty = draft !== applied.config
+  const errors = levelErrors(draft)
   const [log, setLog] = useState<LogLine[]>([])
 
   const onEvent = useCallback((events: MonitorEvent[], state: MonitorState) => {
@@ -105,7 +106,7 @@ export function Simulator() {
   }, [mode, scenario, scenarioStart, update])
 
   const scenarioDef = SCENARIOS.find((s) => s.id === scenario)!
-  const trackMax = useMemo(() => Math.max(0.25, ...applied.config.levels.flatMap((l) => [l.enter, l.exit])) * 1.1, [applied.config.levels])
+  const trackMax = useMemo(() => Math.max(0.25, ...applied.config.levels.flatMap((l) => [l.enter, l.exit])) * (applied.config.direction === 'increasing' ? 1.4 : 1.1), [applied.config.levels, applied.config.direction])
 
   return (
     <>
@@ -227,13 +228,13 @@ export function Simulator() {
             <h2 className="section__title" id="sim-config">
               Monitor
             </h2>
-            <span className="section__sub">{dirty ? '未適用の変更あり' : '適用済み'}</span>
+            <span className="section__sub">{errors.length ? '設定に誤りあり' : dirty ? '未適用の変更あり' : '適用済み'}</span>
           </div>
           <div className="config">
             <label className="field">
               <span className="field__label">direction</span>
               <select className="num" style={{ width: 130, textAlign: 'left' }} value={draft.direction}
-                onChange={(e) => setDraft({ ...draft, direction: e.target.value as Direction })}>
+                onChange={(e) => setDraft(withDirection(draft, e.target.value as Direction))} data-testid="sim-direction">
                 <option value="decreasing">decreasing</option>
                 <option value="increasing">increasing</option>
               </select>
@@ -285,8 +286,15 @@ export function Simulator() {
               <input className="num" type="number" step={1000} value={draft.staleAfterMs} onChange={(e) => setDraft({ ...draft, staleAfterMs: Number(e.target.value) })} />
             </label>
 
+            {errors.length > 0 && (
+              <ul className="config__errors" data-testid="sim-errors">
+                {errors.map((e) => (
+                  <li key={e}>{e}</li>
+                ))}
+              </ul>
+            )}
             <div className="config__actions">
-              <button className="btn btn--primary" disabled={!dirty} onClick={() => { setApplied({ config: draft, rev: applied.rev + 1 }); setLog([]) }} data-testid="sim-apply">
+              <button className="btn btn--primary" disabled={!dirty || errors.length > 0} onClick={() => { setApplied({ config: draft, rev: applied.rev + 1 }); setLog([]) }} data-testid="sim-apply">
                 適用
               </button>
               <button className="btn" onClick={() => setDraft(DEFAULT_CONFIG)}>既定に戻す</button>
@@ -299,6 +307,38 @@ export function Simulator() {
       </div>
     </>
   )
+}
+
+/** Same rule as createMonitor (spec §3.2): exit must be on the safe side of enter. */
+function levelErrors(cfg: SimConfig): string[] {
+  const sign = cfg.direction === 'decreasing' ? -1 : 1
+  const errors = cfg.levels
+    .filter((l) => !(sign * l.exit < sign * l.enter))
+    .map((l) => `${l.id || '(id なし)'}: exit (${l.exit}) は enter (${l.enter}) より${cfg.direction === 'decreasing' ? '大きく' : '小さく'}する`)
+  if (cfg.levels.length === 0) errors.push('Level が 1 つも無い')
+  const ids = cfg.levels.map((l) => l.id)
+  if (new Set(ids).size !== ids.length) errors.push('id が重複している')
+  for (let i = 1; i < cfg.levels.length; i++) {
+    if (!(sign * cfg.levels[i]!.enter > sign * cfg.levels[i - 1]!.enter)) {
+      errors.push(`${cfg.levels[i]!.id}: enter は ${cfg.levels[i - 1]!.id} より危険側（${cfg.direction === 'decreasing' ? '小さく' : '大きく'}）する`)
+    }
+  }
+  return errors
+}
+
+/**
+ * Flipping the direction flips which side is safe: enter/exit swap, and the
+ * thresholds are handed out in reverse so the first level (watch) keeps the
+ * threshold nearest to safe.
+ */
+function withDirection(cfg: SimConfig, direction: Direction): SimConfig {
+  if (direction === cfg.direction) return cfg
+  const reversed = [...cfg.levels].reverse()
+  return {
+    ...cfg,
+    direction,
+    levels: cfg.levels.map((l, i) => ({ id: l.id, enter: reversed[i]!.exit, exit: reversed[i]!.enter })),
+  }
 }
 
 function editLevel(cfg: SimConfig, i: number, patch: Partial<Level>): SimConfig {

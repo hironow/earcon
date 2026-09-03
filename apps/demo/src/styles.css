@@ -716,6 +716,14 @@ select {
   gap: 8px;
 }
 
+.config__errors {
+  margin: 0;
+  padding-left: 18px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--critical);
+}
+
 .config__hint {
   margin: 0;
   font-size: 12px;

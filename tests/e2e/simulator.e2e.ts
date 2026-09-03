@@ -69,3 +69,30 @@ test('stale: samples stop and the monitor goes stale after staleAfterMs', async 
   await expect(page.getByTestId('sim-log')).toContainText('stale')
   await expect(page.getByTestId('sim-level')).toHaveText('watch') // level is kept while stale
 })
+
+test('direction increasing: thresholds flip on switch, apply works, rising value enters watch; invalid edits block apply', async ({ page }) => {
+  const errors: string[] = []
+  page.on('pageerror', (e) => errors.push(e.message))
+  await page.goto('/')
+  await page.getByTestId('unlock').click()
+  await page.getByTestId('tab-simulator').click()
+  await page.getByTestId('sim-direction').selectOption('increasing')
+  await page.getByTestId('sim-apply').click()
+  await expect(page.getByText('monitor id: sim-1')).toBeVisible()
+  // thresholds are re-dealt: watch .03/.02, warn .06/.05, critical .12/.10
+  await page.getByTestId('sim-value').fill('0.04')
+  await expect(page.getByTestId('sim-level')).toHaveText('watch')
+  await page.getByTestId('sim-value').fill('0.025')
+  await expect(page.getByTestId('sim-level')).toHaveText('watch') // hysteresis: exit at .02
+  await page.getByTestId('sim-value').fill('0.015')
+  await expect(page.getByTestId('sim-level')).toHaveText('safe')
+  await page.getByTestId('sim-value').fill('0.13')
+  await expect(page.getByTestId('sim-level')).toHaveText('critical')
+
+  // a hand edit that puts exit on the dangerous side is refused instead of crashing
+  const exitInputs = page.locator('.levels input[type=number]').nth(1)
+  await exitInputs.fill('0.2')
+  await expect(page.getByTestId('sim-errors')).toContainText('watch')
+  await expect(page.getByTestId('sim-apply')).toBeDisabled()
+  expect(errors).toEqual([])
+})

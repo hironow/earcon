@@ -1,16 +1,22 @@
 import * as Tone from 'tone'
 import type { ContinuousSound } from '@earcon/core'
 
+/** A continuous sound driven by a Tone.Clock; `clock` is exposed for diagnostics and tests. */
+export interface TickerSound extends ContinuousSound {
+  readonly clock: Tone.Clock
+}
+
 const clamp01 = (x: number) => Math.min(1, Math.max(0, x))
 
 /** 可変レートのティッカー。onTick には AudioContext 秒と現在の intensity が渡る */
 export function ticker(
   onTick: (time: number, intensity: number) => void,
   hzOf: (intensity: number) => number,
-): ContinuousSound {
+): TickerSound {
   let intensity = 0
   const clock = new Tone.Clock((t) => onTick(t, intensity), hzOf(0))
   return {
+    clock,
     start(i: number) {
       intensity = clamp01(i)
       clock.frequency.value = hzOf(intensity)

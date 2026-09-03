@@ -8,3 +8,4 @@ playwright-report/
 .wrangler/
 coverage/
 *.tsbuildinfo
+.playwright-mcp/

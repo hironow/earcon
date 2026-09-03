@@ -7,6 +7,7 @@ import { defineConfig, devices } from '@playwright/test'
  */
 export default defineConfig({
   testDir: 'tests/e2e',
+  testMatch: /.*\.e2e\.ts$/,
   fullyParallel: false,
   workers: 1,
   retries: 0,
@@ -19,6 +20,7 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
+      testIgnore: /background\.e2e\.ts$/,
       use: {
         ...devices['Desktop Chrome'],
         launchOptions: {

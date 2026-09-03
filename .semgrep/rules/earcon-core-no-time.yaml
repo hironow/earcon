@@ -1,0 +1,21 @@
+rules:
+  - id: earcon-core-no-time
+    message: |
+      @earcon/core must not read the clock or touch the host environment.
+      Time comes in as `Sample.t` / `tick(nowMs)` arguments; the host owns
+      Date, performance, timers and window. (spec §2.2, T20)
+    severity: ERROR
+    languages: [typescript]
+    pattern-either:
+      - pattern: Date.$M(...)
+      - pattern: new Date(...)
+      - pattern: performance.$M(...)
+      - pattern: setTimeout(...)
+      - pattern: setInterval(...)
+      - pattern: requestAnimationFrame(...)
+      - pattern: window.$X
+      - pattern: globalThis.$X
+    metadata:
+      category: purity
+      added: "2026-09-04"
+      adr: docs/adr/0001-spec-deviations-and-interpretations.md

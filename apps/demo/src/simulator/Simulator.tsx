@@ -362,7 +362,7 @@ function Track({ value, levels, direction, max, level }: { value: number; levels
         <div key={l.id} className="track__level" style={{ '--level-color': colorOf(l.id) } as React.CSSProperties}>
           <span className="track__tick track__tick--enter" style={{ left: pct(l.enter) }} title={`${l.id} enter ${l.enter}`} />
           <span className="track__tick track__tick--exit" style={{ left: pct(l.exit) }} title={`${l.id} exit ${l.exit}`} />
-          <span className="track__label" style={{ left: pct((l.enter + l.exit) / 2) }}>{l.id}</span>
+          <span className="track__label" style={{ '--x': pct((l.enter + l.exit) / 2) } as React.CSSProperties}>{l.id}</span>
         </div>
       ))}
       <span className="track__value" style={{ left: pct(value), '--level-color': colorOf(level) } as React.CSSProperties} />

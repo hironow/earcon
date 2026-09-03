@@ -474,7 +474,9 @@ select.num {
   .link {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     min-height: 44px;
+    min-width: 44px;
     padding: 0 6px;
     font-size: 14px;
   }
@@ -660,6 +662,7 @@ select.num {
 .track__label {
   position: absolute;
   top: 2px;
+  left: clamp(28px, var(--x), calc(100% - 28px));
   transform: translateX(-50%);
   font-family: var(--font-mono);
   font-size: 11px;

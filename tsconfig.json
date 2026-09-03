@@ -5,6 +5,7 @@
     { "path": "packages/engine-tone" },
     { "path": "packages/react" },
     { "path": "apps/demo" },
-    { "path": "tests" }
+    { "path": "tests" },
+    { "path": "tests/e2e" }
   ]
 }

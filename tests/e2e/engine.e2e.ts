@@ -65,7 +65,8 @@ test('(3) parkingSensor: set(1) drives the Clock to ≈ 11 Hz', async ({ page })
   const hz = await page.evaluate(async () => {
     const Tone = await window.__earcon!.tone()
     const { parkingSensor } = await window.__earcon!.presets()
-    const sound = parkingSensor({ out: Tone.getDestination() })
+    // ticker() sounds carry their Clock (packages/engine-tone/src/ticker.ts)
+    const sound = parkingSensor({ out: Tone.getDestination() }) as import('../../packages/engine-tone/src/ticker').TickerSound
     sound.start(0)
     const atZero = sound.clock.frequency.value
     sound.set(1)

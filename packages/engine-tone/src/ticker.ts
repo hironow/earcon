@@ -14,7 +14,14 @@ export function ticker(
   hzOf: (intensity: number) => number,
 ): TickerSound {
   let intensity = 0
-  const clock = new Tone.Clock((t) => onTick(t, intensity), hzOf(0))
+  let lastTime = -Infinity
+  // While `frequency` ramps, Tone.Clock can deliver a tick at or before the previous
+  // tick's time; monophonic synths throw on a non-increasing attack. Drop those ticks.
+  const clock = new Tone.Clock((t) => {
+    if (t <= lastTime) return
+    lastTime = t
+    onTick(t, intensity)
+  }, hzOf(0))
   return {
     clock,
     start(i: number) {

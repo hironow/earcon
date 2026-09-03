@@ -120,6 +120,24 @@ describe('createToneEngine', () => {
     expect(log).toEqual(['knock.play(0)@1.5', 'knock.play(0)@1.51', 'knock.play(0)@1.52'])
   })
 
+  test('a sound whose factory throws at unlock is dropped; the engine still becomes ready', async () => {
+    const { engine, log } = engineWith()
+    const bus = engine.createBus('w1')
+    const bad = engine.createContinuous({ kind: 'custom', factory: () => { throw new Error('boom') } }, bus)
+    const good = engine.createContinuous({ kind: 'preset', id: 'sonar' }, bus)
+    bad.start(1)
+    good.start(0.5)
+    const orig = console.error
+    const errors: unknown[] = []
+    console.error = (...a: unknown[]) => errors.push(a)
+    await engine.unlock()
+    console.error = orig
+    expect(engine.status).toBe('ready')
+    expect(log).toContain('sonar.start(0.5)')
+    expect(errors).toHaveLength(1)
+    bad.set(1) // no-op, no throw
+  })
+
   test('sounds disposed before unlock are never built', async () => {
     const { engine, log } = engineWith()
     const bus = engine.createBus('w1')

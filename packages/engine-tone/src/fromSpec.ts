@@ -1,5 +1,5 @@
 import * as Tone from 'tone'
-import type { ContinuousSound, OneShotSound, SynthSpec } from '@earcon/core'
+import { validateSynthSpec, type ContinuousSound, type OneShotSound, type SynthSpec } from '@earcon/core'
 import type { OneShotOptions, SoundContext } from './presets'
 import { ticker } from './ticker'
 
@@ -8,6 +8,8 @@ import { ticker } from './ticker'
  * Chain: voice → [fx.filter] → [fx.delay] → out.
  */
 export function fromSpec(spec: SynthSpec, ctx: SoundContext): ContinuousSound | OneShotSound {
+  const errors = validateSynthSpec(spec)
+  if (errors.length) throw new Error(`@earcon/engine-tone: invalid SynthSpec:\n  ${errors.join('\n  ')}`)
   return spec.mode === 'continuous' ? continuousFromSpec(spec, ctx) : oneShotFromSpec(spec, ctx)
 }
 

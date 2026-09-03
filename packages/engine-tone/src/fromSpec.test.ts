@@ -15,6 +15,12 @@ const calls = (kind: string, method: string) => nodes(kind).flatMap((n) => n.cal
 describe('fromSpec (spec §4.4)', () => {
   beforeEach(() => resetFakeTone())
 
+  test('rejects an invalid spec at build time with every problem listed', () => {
+    expect(() => fromSpec({ kind: 'synth' } as unknown as SynthSpec, { out })).toThrow(/mode[\s\S]*voice[\s\S]*envelope/)
+    expect(() => fromSpec({ kind: 'synth', mode: 'continuous', voice: 'fm', envelope: env, volume: -6, pitch: { base: 'X9', semitonesAtMax: 0 } }, { out })).toThrow(/pitch\.base/)
+    expect(FakeNode.live.size).toBe(0) // nothing was built
+  })
+
   test.each([
     ['synth', 'Synth'],
     ['fm', 'FMSynth'],

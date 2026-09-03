@@ -124,6 +124,19 @@ describe('presets (spec appendix A) against a fake Tone', () => {
     sound.dispose()
   })
 
+  test('ticker drops ticks whose time is not after the previous tick (rate ramps)', () => {
+    const sound = continuous.parkingSensor({ out })
+    const clock = FakeClock.instances[0]!
+    const synth = FakeNode.all.find((n) => n.kind === 'Synth')!
+    sound.start(1)
+    clock.fire(1.0)
+    clock.fire(1.0) // duplicate
+    clock.fire(0.9) // earlier
+    clock.fire(1.1)
+    expect(synth.calls.filter((c) => c.method === 'triggerAttackRelease').map((c) => c.args[2])).toEqual([1.0, 1.1])
+    sound.dispose()
+  })
+
   test('ticker does not restart an already started clock', () => {
     const sound = continuous.sonar({ out })
     const clock = FakeClock.instances[0]!

@@ -251,7 +251,15 @@ export function createToneEngine(opts: ToneEngineOptions = {}): Engine {
       mute = new tone.Gain(muted ? 0 : 1).connect(master)
       presets = loadedPresets
       Tone = tone
-      for (const lazy of [...lazies]) lazy.materialize()
+      for (const lazy of [...lazies]) {
+        try {
+          lazy.materialize()
+        } catch (e) {
+          // One bad spec (e.g. invalid SynthSpec) must not take the whole engine down.
+          console.error('@earcon/engine-tone: could not build a sound queued before unlock', e)
+          lazies.delete(lazy)
+        }
+      }
       setStatus(context.state === 'running' ? 'ready' : 'suspended')
     })()
     try {

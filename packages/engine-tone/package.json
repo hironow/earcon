@@ -10,9 +10,15 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
+    "./from-spec": {
+      "types": "./dist/from-spec.d.ts",
+      "import": "./dist/from-spec.js"
+    },
     "./specs/*": "./specs/*.json"
   },
   "files": [
+    "LICENSE",
+    "README.md",
     "dist",
     "specs"
   ],
@@ -34,5 +40,18 @@
     "tone": "catalog:",
     "tsdown": "catalog:",
     "typescript": "catalog:"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hironow/earcon",
+    "directory": "packages/engine-tone"
+  },
+  "keywords": [
+    "sonification",
+    "audio",
+    "notification",
+    "tone.js",
+    "react",
+    "earcon"
+  ]
 }

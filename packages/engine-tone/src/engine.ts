@@ -18,6 +18,7 @@ export interface ToneEngineOptions {
 
 const DEFAULT_LOOK_AHEAD = 0.3
 const DEFAULT_MASTER_DB = -6
+const MIN_ONESHOT_GAP_SEC = 0.01
 
 function webAudioAvailable(): boolean {
   if (typeof window === 'undefined') return false
@@ -198,9 +199,17 @@ export function createToneEngine(opts: ToneEngineOptions = {}): Engine {
     }
     lazies.add(lazy)
     if (ready()) lazy.materialize()
+    let lastTime = -Infinity
     return {
       // Plays before the engine is ready are dropped on purpose (ADR-0001 §15).
-      play: (o) => real?.play(o),
+      play(o) {
+        if (!real || !Tone) return
+        // Monophonic Tone synths throw when an attack is scheduled at or before the
+        // previous one; two transitions in the same instant must both sound.
+        const time = Math.max(Tone.now(), lastTime + MIN_ONESHOT_GAP_SEC)
+        lastTime = time
+        real.play({ ...o, time } as Parameters<OneShotSound['play']>[0])
+      },
       dispose: lazy.dispose,
     }
   }

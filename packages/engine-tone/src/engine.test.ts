@@ -15,7 +15,7 @@ function makePresets() {
     dispose: () => log.push(`${id}.dispose`),
   })
   const shot = (id: string) => (): OneShotSound => ({
-    play: (o) => log.push(`${id}.play(${o?.transpose ?? 0})`),
+    play: (o) => log.push(`${id}.play(${o?.transpose ?? 0})@${(o as { time?: number } | undefined)?.time ?? 'now'}`),
     dispose: () => log.push(`${id}.dispose`),
   })
   const presets = {
@@ -106,7 +106,18 @@ describe('createToneEngine', () => {
     await engine.unlock()
     expect(log).toEqual([])
     knock.play({ transpose: 3 })
-    expect(log).toEqual(['knock.play(3)'])
+    expect(log).toEqual(['knock.play(3)@1.5'])
+  })
+
+  test('one-shots played in the same instant get strictly increasing times', async () => {
+    const { engine, log } = engineWith()
+    const bus = engine.createBus('w1')
+    const knock = engine.createOneShot({ kind: 'preset', id: 'knock' }, bus)
+    await engine.unlock()
+    knock.play()
+    knock.play()
+    knock.play()
+    expect(log).toEqual(['knock.play(0)@1.5', 'knock.play(0)@1.51', 'knock.play(0)@1.52'])
   })
 
   test('sounds disposed before unlock are never built', async () => {

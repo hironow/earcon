@@ -45,3 +45,35 @@ test('designer: twins preview, JSON round-trip, save, assign to warn, simulator 
   await page.waitForTimeout(500)
   expect(errors).toEqual([])
 })
+
+test('designer: bad JSON, missing fields and invalid note names are refused without a crash', async ({ page }) => {
+  const errors: string[] = []
+  page.on('pageerror', (e) => errors.push(e.message))
+  await page.goto('/')
+  await page.getByTestId('unlock').click()
+  await page.getByTestId('tab-designer').click()
+
+  await page.getByTestId('dz-json').fill('{"kind":"synth"}')
+  await page.getByRole('button', { name: '読み込む' }).click()
+  await expect(page.getByTestId('dz-json-error')).toContainText('mode')
+  await expect(page.getByTestId('dz-json-error')).toContainText('envelope')
+  await expect(page.getByTestId('error-boundary')).toHaveCount(0)
+  await expect(page.getByTestId('dz-voice')).toBeVisible()
+
+  await page.getByTestId('dz-json').fill('not json at all')
+  await page.getByRole('button', { name: '読み込む' }).click()
+  await expect(page.getByTestId('dz-json-error')).toContainText('JSON')
+
+  // invalid note name through the form: preview is disabled and the reason shown
+  await page.getByTestId('twin-sonar').click()
+  await page.getByLabel('base').fill('X9')
+  await expect(page.getByTestId('dz-spec-errors')).toContainText('pitch.base')
+  await expect(page.getByTestId('dz-toggle')).toBeDisabled()
+  await page.getByLabel('base').fill('A5')
+  await expect(page.getByTestId('dz-toggle')).toBeEnabled()
+
+  // empty save name is refused
+  await page.getByTestId('dz-name').fill('   ')
+  await expect(page.getByTestId('dz-save')).toBeDisabled()
+  expect(errors).toEqual([])
+})

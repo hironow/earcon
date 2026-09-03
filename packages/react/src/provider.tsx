@@ -52,7 +52,12 @@ export function NotifierProvider({
     store.configure(patch)
   }, [store, sounds, transitions, policy, staleRepeatSec])
 
-  useEffect(() => () => store?.dispose(), [store])
+  // StrictMode runs mount → cleanup → mount; stop/start keeps the tick loop alive across it.
+  useEffect(() => {
+    if (!store) return
+    store.start()
+    return () => store.stop()
+  }, [store])
 
   const value = useMemo(() => ({ engine: server ? null : engine, store }), [engine, server, store])
   return <NotifierContext.Provider value={value}>{children}</NotifierContext.Provider>

@@ -50,6 +50,11 @@ export interface NotifierStore {
   acknowledgeAll(): void
   getState(id: string): MonitorState
   subscribe(id: string, cb: () => void): () => void
+  /** Start the watchdog tick loop (idempotent). Called at creation and by the provider's effect. */
+  start(): void
+  /** Stop the tick loop; `start()` resumes it. Survives React StrictMode's mount/unmount/mount. */
+  stop(): void
+  /** stop() + remove every monitor. */
   dispose(): void
 }
 
@@ -92,14 +97,25 @@ export function createNotifierStore(initial: NotifierConfig): NotifierStore {
 
   const entries = new Map<string, Entry>()
   const listeners = new Map<string, Set<() => void>>()
+  /** Stable placeholder states for ids without a monitor (useSyncExternalStore needs identity). */
+  const placeholders = new Map<string, MonitorState>()
 
-  const cancelTick = engine.scheduleRepeat((nowMs) => {
-    for (const [id, entry] of entries) {
-      const events = entry.monitor.tick(nowMs)
-      if (events.length) handle(id, entry, events, nowMs)
-      repeatStale(entry, nowMs)
-    }
-  }, tickIntervalSec)
+  let cancelTick: (() => void) | null = null
+  function start() {
+    if (cancelTick) return
+    cancelTick = engine.scheduleRepeat((nowMs) => {
+      for (const [id, entry] of entries) {
+        const events = entry.monitor.tick(nowMs)
+        if (events.length) handle(id, entry, events, nowMs)
+        repeatStale(entry, nowMs)
+      }
+    }, tickIntervalSec)
+  }
+  function stop() {
+    cancelTick?.()
+    cancelTick = null
+  }
+  start()
 
   // ---------------------------------------------------------------- helpers
 
@@ -258,7 +274,14 @@ export function createNotifierStore(initial: NotifierConfig): NotifierStore {
       for (const id of entries.keys()) this.acknowledge(id)
     },
     getState(id) {
-      return entries.get(id)?.monitor.state ?? initialMonitorState(id)
+      const entry = entries.get(id)
+      if (entry) return entry.monitor.state
+      let placeholder = placeholders.get(id)
+      if (!placeholder) {
+        placeholder = initialMonitorState(id)
+        placeholders.set(id, placeholder)
+      }
+      return placeholder
     },
     subscribe(id, cb) {
       let set = listeners.get(id)
@@ -272,8 +295,10 @@ export function createNotifierStore(initial: NotifierConfig): NotifierStore {
         if (set.size === 0) listeners.delete(id)
       }
     },
+    start,
+    stop,
     dispose() {
-      cancelTick()
+      stop()
       for (const id of [...entries.keys()]) this.removeMonitor(id)
     },
   }

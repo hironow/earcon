@@ -170,6 +170,7 @@ describe('NotifierStore wiring (spec §5.4 / §5.5)', () => {
 
   test('getState for an unknown id returns a safe initial state; update is a no-op', () => {
     expect(store.getState('nope')).toMatchObject({ id: 'nope', level: null, intensity: 0 })
+    expect(store.getState('nope')).toBe(store.getState('nope')) // stable identity for useSyncExternalStore
     expect(() => store.update('nope', 0.1, 0)).not.toThrow()
   })
 
@@ -193,6 +194,19 @@ describe('NotifierStore wiring (spec §5.4 / §5.5)', () => {
     expect(engine.log).toContain('repeat:1')
     store.dispose()
     expect(engine.log).toContain('repeat:cancel')
+  })
+
+  test('stop/start survive a StrictMode-style mount → unmount → mount', () => {
+    store.addMonitor({ id: 'a', direction: 'decreasing', levels, staleAfterMs: 15_000 })
+    store.update('a', 0.035, 0)
+    store.start() // idempotent while running
+    expect(engine.log.filter((l) => l === 'repeat:1')).toHaveLength(1)
+    store.stop()
+    engine.tick(15_001) // cancelled loop: nothing happens
+    expect(store.getState('a').stale).toBe(false)
+    store.start()
+    engine.tick(15_002)
+    expect(store.getState('a').stale).toBe(true)
   })
 
   test('default sounds (ADR-0001 §16) are used when the provider gives none', () => {

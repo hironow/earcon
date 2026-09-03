@@ -1,0 +1,26 @@
+{
+  "name": "earcon",
+  "private": true,
+  "type": "module",
+  "workspaces": {
+    "packages": ["packages/*", "apps/*"],
+    "catalog": {
+      "react": "^19",
+      "react-dom": "^19",
+      "@types/react": "^19",
+      "@types/react-dom": "^19",
+      "tone": "^15",
+      "typescript": "^5",
+      "tsdown": "^0.22.14",
+      "vite": "^8",
+      "@vitejs/plugin-react": "^6"
+    }
+  },
+  "devDependencies": {
+    "@changesets/cli": "^3",
+    "@happy-dom/global-registrator": "^20",
+    "@playwright/test": "^1.62",
+    "@types/bun": "^1.4",
+    "typescript": "catalog:"
+  }
+}

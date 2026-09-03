@@ -1,0 +1,4 @@
+[test]
+preload = ["../../test/happydom.ts"]
+coverageThreshold = 0.9
+coverageSkipTestFiles = true

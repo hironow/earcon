@@ -1,0 +1,32 @@
+{
+  "name": "@earcon/engine-tone",
+  "version": "0.1.0",
+  "description": "Tone.js engine for earcon: presets (sonar, parking sensor, heartbeat, siren...), buses, SynthSpec interpreter.",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "publishConfig": { "access": "public" },
+  "scripts": {
+    "build": "tsdown",
+    "publish:dry": "bun pm pack --dry-run",
+    "publish:npm": "bun publish"
+  },
+  "dependencies": {
+    "@earcon/core": "workspace:*"
+  },
+  "peerDependencies": {
+    "tone": ">=15"
+  },
+  "devDependencies": {
+    "tone": "catalog:",
+    "tsdown": "catalog:",
+    "typescript": "catalog:"
+  }
+}

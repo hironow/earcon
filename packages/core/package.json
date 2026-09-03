@@ -1,0 +1,25 @@
+{
+  "name": "@earcon/core",
+  "version": "0.1.0",
+  "description": "Pure sonification state machine: monitors, hysteresis levels, ETA-based intensity, arbiter. No DOM, no Web Audio.",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "publishConfig": { "access": "public" },
+  "scripts": {
+    "build": "tsdown",
+    "publish:dry": "bun pm pack --dry-run",
+    "publish:npm": "bun publish"
+  },
+  "devDependencies": {
+    "tsdown": "catalog:",
+    "typescript": "catalog:"
+  }
+}

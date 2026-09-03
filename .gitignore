@@ -1,0 +1,9 @@
+private/
+.DS_Store
+node_modules/
+dist/
+.tsbuild/
+test-results/
+playwright-report/
+.wrangler/
+coverage/

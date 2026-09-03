@@ -27,9 +27,13 @@ test-core:
 test-e2e:
     bunx playwright test
 
-# Run the demo app with Vite
+# Run the demo app with Vite (localhost only)
 dev:
     bun run --bun --filter demo dev
+
+# Run the demo reachable from phones on the same network (prints the LAN URL)
+dev-lan:
+    bun run --bun --filter demo dev -- --host 0.0.0.0
 
 # Type-check every project reference
 typecheck:

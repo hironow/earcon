@@ -28,7 +28,8 @@ horizontal overflow on 8 viewports × 4 tabs, 44 px touch targets, safe-area ins
 Designer fieldsets on phones, landscape-phone density, and the Fold-open
 two-column boundary (860 px); second pass folded the Designer side sections and
 twin links on phones and compacted the rail to two rows (≤ 110 px). Re-review: all
-findings fixed, no regressions. `just dev-lan` serves the demo on the LAN for phones.
+findings fixed, no regressions. The requester verified the demo on a real phone
+over the LAN on 2026-09-04. `just dev-lan` serves the demo on the LAN for phones.
 
 ## In Progress
 

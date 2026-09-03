@@ -10,6 +10,9 @@ import { join } from 'node:path'
  */
 const FORBIDDEN = [/\bDate\b/, /\bperformance\b/, /\bsetTimeout\b/, /\bsetInterval\b/, /\bwindow\b/, /\bglobalThis\b/]
 
+/** Comments may legitimately mention `performance.now()`; only code is scanned. */
+const stripComments = (src: string) => src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '')
+
 const sourceFiles = readdirSync(import.meta.dir).filter(
   (f) => f.endsWith('.ts') && !f.endsWith('.test.ts'),
 )
@@ -21,7 +24,7 @@ describe('T20 core is time- and host-independent', () => {
 
   test('no source file references Date, performance, timers, window or globalThis', () => {
     const offenders = sourceFiles.flatMap((f) => {
-      const text = readFileSync(join(import.meta.dir, f), 'utf8')
+      const text = stripComments(readFileSync(join(import.meta.dir, f), 'utf8'))
       return FORBIDDEN.filter((re) => re.test(text)).map((re) => `${f}: ${re.source}`)
     })
     expect(offenders).toEqual([])

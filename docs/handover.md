@@ -1,6 +1,6 @@
 # Handover
 
-**Last updated:** 2026-09-04 06:40 (JST)
+**Last updated:** 2026-09-04 04:00 (JST)
 **Updated by:** Claude Code session (earcon M0)
 
 ## Current State
@@ -11,6 +11,9 @@ Auditioner; Playwright §4.5 + §9 leak check) and M3 (`@earcon/react`: provider
 hooks, UnlockGate, sync-based wiring with 28 store/hook/SSR tests; demo Monitor
 Simulator with the four §7.3 scenarios covered by Playwright) are done and
 committed on `main`. `just check` and `just test-e2e` pass locally.
+
+Post-M6 additions on 2026-09-04: Simulator direction validation (requester
+report), and the preset catalog expanded to 28 (ADR-0005, two research surveys).
 
 ## In Progress
 

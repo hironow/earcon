@@ -88,8 +88,28 @@ value ──▶ Monitor ──▶ level (with hysteresis) ──▶ continuous s
 { kind: 'custom', factory: (ctx) => sound }  // your own Tone.js code
 ```
 
-Continuous presets: `sonar`, `parkingSensor`, `geiger`, `heartbeat`, `countdown`, `hiLoSiren`, `redAlert`.
-One-shot presets: `bell`, `register`, `coin`, `knock`, `allClear`, `buzzer`, `chime`.
+28 presets, each a metaphor people already know. Continuous (the level sounds; what changes with intensity):
+
+| id | metaphor | intensity 0 → 1 |
+| --- | --- | --- |
+| `sonar` | sonar ping | 3 s → 0.7 s apart, slightly higher |
+| `parkingSensor` | parking sensor | 0.9 s → 0.09 s apart, fixed pitch |
+| `geiger` | Geiger counter | click density (stochastic) |
+| `heartbeat` | heart monitor | 55 → 170 bpm |
+| `countdown` | countdown | 1 Hz, pitch rises and doubles near the end |
+| `hiLoSiren` | hi-lo siren | 1.6 → 4 Hz alternation |
+| `redAlert` | red alert | sweep rate 1.2 → 3.5 Hz |
+| `stallWarning` | stall warning clicker | noise clicks 6 → 28 Hz |
+| `rwrLock` | missile lock-on | beeps 3 → 30 Hz, duty grows until it fuses into one tone |
+| `spo2Pulse` | pulse oximeter | fixed 72 bpm, pitch falls 880 → 330 Hz, tremolo in the danger zone |
+| `laneDeparture` | lane-departure rumble | low noise bursts 1.2 s → 0.15 s apart |
+| `foghorn` | foghorn | long low notes 8 s → 1.5 s apart, 110 → 160 Hz |
+| `kettle` | kettle whistle | sustained 2.2 → 3.4 kHz, wobble fades |
+| `tickingClock` | ticking clock | even clicks 1 → 8 Hz, accents late |
+
+One-shot (transitions): `bell`, `register`, `coin`, `knock` (stale), `allClear` (back to safe), `buzzer`, `chime`, `sosMorse`, `gong`, `glassBreak`, `powerDown`, `squelch` (data back), `waterDrop`, `latchClick`.
+
+Why these: abstract tones lose half their discriminability as soon as two sound at once, while everyday-sound metaphors hold up; rate is the most robust urgency axis and pitch alone should never carry the message. Sources and the selection rationale are in [ADR-0005](docs/adr/0005-preset-expansion-to-28.md).
 
 ## Browser support
 

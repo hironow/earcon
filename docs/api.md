@@ -72,8 +72,9 @@ Bus graph: `sound → Gain(volume dB) → Panner → mute Gain → master Gain �
 
 ### Presets
 
-`catalog` (id, kind, metaphor, use), `presetIds`, `presetRate` (Hz range per
-continuous preset), `defaultLevelSounds`. Factories are available after unlock
+`catalog` (id, kind, metaphor, use; 28 entries), `presetIds`, `presetRate` (Hz range
+per continuous preset; `note: 'sustained'` for clock-less sounds), `presetHint` (one
+line per preset: what to listen for), `defaultLevelSounds`. Factories are available after unlock
 through the lazily loaded `presets` module; refer to them by id.
 
 ### `fromSpec(spec: SynthSpec, ctx: SoundContext)` — `@earcon/engine-tone/from-spec`

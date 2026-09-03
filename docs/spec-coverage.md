@@ -32,7 +32,7 @@ appears in a core test name, so this table cannot silently drift.
 | check | test name |
 | --- | --- |
 | (1) running context after unlock | `(1) unlock → Tone.getContext().state === "running"` |
-| (2) all presets start/set/stop/dispose | `(2) every preset survives start/set/stop/dispose and play/dispose without throwing` |
+| (2) all presets start/set/stop/dispose (28) | `(2) every preset survives start/set/stop/dispose and play/dispose without throwing` |
 | (3) parkingSensor ≈ 11 Hz | `(3) parkingSensor: set(1) drives the Clock to ≈ 11 Hz` |
 | §9 leak check | `tests/e2e/leak.e2e.ts`: `50 start/stop cycles keep the heap stable after dispose` |
 

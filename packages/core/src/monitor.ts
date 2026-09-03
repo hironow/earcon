@@ -38,7 +38,19 @@ function bandWidth(levels: NormalizedLevel[], k: number): number {
   return Math.abs(current.enter - current.exit) * 4 // single level: provisional (spec §3.4)
 }
 
+function validateOptions(opts: MonitorOptions): void {
+  const horizon = opts.urgency?.mode === 'eta' ? (opts.urgency.horizonSec ?? DEFAULT_HORIZON_SEC) : DEFAULT_HORIZON_SEC
+  if (!(horizon > 1)) throw new Error(`createMonitor(${opts.id}): urgency.horizonSec must be > 1 (log10 scale), got ${horizon}`)
+  if (opts.staleAfterMs !== undefined && !(opts.staleAfterMs >= 0)) {
+    throw new Error(`createMonitor(${opts.id}): staleAfterMs must be >= 0, got ${opts.staleAfterMs}`)
+  }
+  if (opts.velocityWindowMs !== undefined && !(opts.velocityWindowMs > 0)) {
+    throw new Error(`createMonitor(${opts.id}): velocityWindowMs must be > 0, got ${opts.velocityWindowMs}`)
+  }
+}
+
 export function createMonitor(opts: MonitorOptions): Monitor {
+  validateOptions(opts)
   const levels = normalizeLevels(opts)
   const sign = opts.direction === 'decreasing' ? -1 : 1
   const urgency = opts.urgency ?? { mode: 'value' }

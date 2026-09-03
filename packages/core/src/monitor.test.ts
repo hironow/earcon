@@ -275,6 +275,14 @@ describe('createMonitor: options validation and reset', () => {
     ).toThrow(/exit/)
   })
 
+  test('horizonSec must be > 1 (log10(1) = 0), staleAfterMs >= 0, velocityWindowMs > 0', () => {
+    expect(() => createMonitor({ ...base, urgency: { mode: 'eta', eventAt: 0, horizonSec: 1 } })).toThrow(/horizonSec/)
+    expect(() => createMonitor({ ...base, urgency: { mode: 'eta', eventAt: 0, horizonSec: -5 } })).toThrow(/horizonSec/)
+    expect(() => createMonitor({ ...base, staleAfterMs: -1 })).toThrow(/staleAfterMs/)
+    expect(() => createMonitor({ ...base, velocityWindowMs: 0 })).toThrow(/velocityWindowMs/)
+    expect(() => createMonitor({ ...base, urgency: { mode: 'eta', eventAt: 0, horizonSec: 1.5 } })).not.toThrow()
+  })
+
   test('empty levels throws', () => {
     expect(() => createMonitor({ ...base, levels: [] })).toThrow(/levels/)
   })

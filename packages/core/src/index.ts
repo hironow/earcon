@@ -1,5 +1,6 @@
 export { createMonitor } from './monitor'
 export { selectAudible } from './arbiter'
+export { isSynthSpec, validateSynthSpec, NOTE_NAME } from './synthSpec'
 export type {
   ArbiterPolicy,
   Bus,

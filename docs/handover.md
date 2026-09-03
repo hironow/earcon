@@ -1,6 +1,6 @@
 # Handover
 
-**Last updated:** 2026-09-04 04:00 (JST)
+**Last updated:** 2026-09-04 04:20 (JST)
 **Updated by:** Claude Code session (earcon M0)
 
 ## Current State
@@ -13,7 +13,13 @@ Simulator with the four §7.3 scenarios covered by Playwright) are done and
 committed on `main`. `just check` and `just test-e2e` pass locally.
 
 Post-M6 additions on 2026-09-04: Simulator direction validation (requester
-report), and the preset catalog expanded to 28 (ADR-0005, two research surveys).
+report); preset catalog expanded to 28 (ADR-0005, two research surveys); chaos
+test round (Playwright MCP subagent) fixed: `validateSynthSpec` in core, Designer
+JSON crash, ErrorBoundary per tab, ticker monotonic-time guard, fromSpec build-time
+validation, engine keeps working when one queued sound fails to build, Simulator
+empty id / horizonSec / staleAfterMs validation, top-n clamp, save-name checks;
+loudness pass (Tone.Offline peak per preset, `tests/e2e/loudness.e2e.ts`) fixed
+stallWarning (too quiet), gong (clipping), squelch (too quiet).
 
 ## In Progress
 

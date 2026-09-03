@@ -1041,6 +1041,10 @@ details.fieldset > summary::-webkit-details-marker {
   display: none;
 }
 
+details.fieldset:not([open]) {
+  padding: 0 6px;
+}
+
 /* ---------------------------------------------------------------- wallets */
 
 .wallets {

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { validateSynthSpec, type Bus, type ContinuousSound, type Engine, type EngineStatus, type OneShotSound, type SynthSpec } from '@earcon/core'
 import { assignSound, useAssignments } from '../sound-assignments'
 import { deleteSpec, downloadSpec, listSaved, saveSpec, type SavedSpec } from './storage'
@@ -52,6 +52,7 @@ export function Designer({ engine, status }: Props) {
   const [rev, setRev] = useState(0) // bump to rebuild the preview sound
   const assignments = useAssignments()
   const locked = status !== 'ready'
+  const narrow = useNarrow()
 
   useEffect(() => setSaved(listSaved()), [])
   useEffect(() => setJsonText(JSON.stringify(spec, null, 2)), [spec])
@@ -167,23 +168,21 @@ export function Designer({ engine, status }: Props) {
               </select>
             </label>
 
-            <fieldset className="fieldset">
-              <legend className="field__label">envelope (s)</legend>
+            <Fold title="envelope (s)" defaultOpen={!narrow}>
               {(['attack', 'decay', 'sustain', 'release'] as const).map((k) => (
                 <label key={k} className="field">
                   <span className="field__label">{k}</span>
                   <input className="num" type="number" step={0.001} min={0} value={spec.envelope[k]} onChange={(e) => setEnv(k, Number(e.target.value))} />
                 </label>
               ))}
-            </fieldset>
+            </Fold>
 
             <label className="field">
               <span className="field__label">volume dB</span>
               <input className="num" type="number" step={1} value={spec.volume} onChange={(e) => patch({ volume: Number(e.target.value) })} />
             </label>
 
-            <fieldset className="fieldset">
-              <legend className="field__label">fx</legend>
+            <Fold title="fx" defaultOpen={!narrow}>
               <label className="field">
                 <span className="field__label">filter</span>
                 <select className="num" style={{ width: 100, textAlign: 'left' }} value={spec.fx?.filter?.type ?? ''}
@@ -212,12 +211,11 @@ export function Designer({ engine, status }: Props) {
                   </>
                 )}
               </label>
-            </fieldset>
+            </Fold>
 
             {spec.mode === 'continuous' ? (
               <>
-                <fieldset className="fieldset">
-                  <legend className="field__label">rate (Hz at intensity 0 → 1)</legend>
+                <Fold title="rate (Hz at intensity 0 → 1)" defaultOpen={!narrow}>
                   <label className="field">
                     <span className="field__label">min</span>
                     <input className="num" type="number" step={0.1} min={0.05} value={spec.rate?.minHz ?? 1} onChange={(e) => patch({ rate: { ...(spec.rate ?? { minHz: 1, maxHz: 1 }), minHz: Number(e.target.value) } })} />
@@ -233,9 +231,8 @@ export function Designer({ engine, status }: Props) {
                       <option value="exp">exp</option>
                     </select>
                   </label>
-                </fieldset>
-                <fieldset className="fieldset">
-                  <legend className="field__label">pitch</legend>
+                </Fold>
+                <Fold title="pitch" defaultOpen={!narrow}>
                   <label className="field">
                     <span className="field__label">base</span>
                     <input className="num" style={{ textAlign: 'left' }} value={spec.pitch?.base ?? 'C5'} onChange={(e) => patch({ pitch: { ...(spec.pitch ?? { base: 'C5', semitonesAtMax: 0 }), base: e.target.value } })} />
@@ -244,7 +241,7 @@ export function Designer({ engine, status }: Props) {
                     <span className="field__label">semitones@1</span>
                     <input className="num" type="number" step={1} value={spec.pitch?.semitonesAtMax ?? 0} onChange={(e) => patch({ pitch: { ...(spec.pitch ?? { base: 'C5', semitonesAtMax: 0 }), semitonesAtMax: Number(e.target.value) } })} />
                   </label>
-                </fieldset>
+                </Fold>
                 <RowTable
                   title="pattern（1 tick 内のヒット）"
                   columns={['offset', 'note', 'dur']}
@@ -380,6 +377,29 @@ export function Designer({ engine, status }: Props) {
         </div>
       </div>
     </>
+  )
+}
+
+function useNarrow(): boolean {
+  const [narrow, setNarrow] = useState(() => typeof window !== 'undefined' && window.matchMedia('(max-width: 540px)').matches)
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 540px)')
+    const on = () => setNarrow(mq.matches)
+    mq.addEventListener('change', on)
+    return () => mq.removeEventListener('change', on)
+  }, [])
+  return narrow
+}
+
+/** A fieldset that folds on phones (open by default on wider screens). */
+function Fold({ title, children, defaultOpen }: { title: string; children: ReactNode; defaultOpen: boolean }) {
+  const [open, setOpen] = useState(defaultOpen)
+  useEffect(() => setOpen(defaultOpen), [defaultOpen])
+  return (
+    <details className="fieldset" open={open} onToggle={(e) => setOpen((e.target as HTMLDetailsElement).open)}>
+      <summary className="field__label">{title}</summary>
+      {children}
+    </details>
   )
 }
 

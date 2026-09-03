@@ -1,6 +1,6 @@
 # Handover
 
-**Last updated:** 2026-09-04 04:40 (JST)
+**Last updated:** 2026-09-04 05:00 (JST)
 **Updated by:** Claude Code session (earcon M0)
 
 ## Current State
@@ -22,7 +22,11 @@ loudness pass (Tone.Offline peak per preset, `tests/e2e/loudness.e2e.ts`) fixed
 stallWarning (too quiet), gong (clipping), squelch (too quiet); responsive pass for
 phones / foldables / dual-screen / tablets (`tests/e2e/responsive.e2e.ts`: no
 horizontal overflow on 8 viewports × 4 tabs, 44 px touch targets, safe-area insets,
-`horizontal-viewport-segments` for hinged devices).
+`horizontal-viewport-segments` for hinged devices); a read-only device review
+(Playwright MCP subagent) then fixed the 768–899 px header wrap, the 2.7:1
+`--ink-dim` contrast, selected-tab visibility in the scrolling strip, collapsible
+Designer fieldsets on phones, landscape-phone density, and the Fold-open
+two-column boundary (860 px). `just dev-lan` serves the demo on the LAN for phones.
 
 ## In Progress
 

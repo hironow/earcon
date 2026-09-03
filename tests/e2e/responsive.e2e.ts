@@ -12,6 +12,7 @@ const VIEWPORTS: Array<{ name: string; width: number; height: number; touch: boo
   { name: 'Surface Duo', width: 540, height: 720, touch: true },
   { name: 'iPad portrait', width: 820, height: 1180, touch: true },
   { name: 'iPad landscape', width: 1180, height: 820, touch: true },
+  { name: 'iPhone landscape', width: 844, height: 390, touch: true },
   { name: 'Desktop', width: 1280, height: 900, touch: false },
 ]
 const TABS = ['auditioner', 'simulator', 'designer', 'wallets']
@@ -32,7 +33,10 @@ async function audit(page: Page, width: number) {
         return b.width > 0 && b.height < 44
       })
       .map((el) => `${el.tagName.toLowerCase()}.${[...el.classList].join('.')}`)
-    return { overflow: doc.scrollWidth - doc.clientWidth, wide: [...new Set(wide)], small: [...new Set(small)] }
+    const tall = [...document.querySelectorAll('header .btn')].filter((el) => el.getBoundingClientRect().height > 48).map((el) => el.textContent?.trim() ?? '')
+    const selected = document.querySelector('.tab[aria-selected="true"]')!.getBoundingClientRect()
+    const selectedVisible = selected.left >= -1 && selected.right <= vw + 1
+    return { overflow: doc.scrollWidth - doc.clientWidth, wide: [...new Set(wide)], small: [...new Set(small)], tall, selectedVisible }
   }, width)
 }
 
@@ -44,11 +48,13 @@ for (const vp of VIEWPORTS) {
     await page.getByTestId('unlock').click()
     for (const tab of TABS) {
       await page.getByTestId(`tab-${tab}`).click()
-      await page.waitForTimeout(150)
+      await page.waitForTimeout(400)
       const r = await audit(page, vp.width)
       expect(r.overflow, `${tab}: horizontal overflow`).toBeLessThanOrEqual(0)
       expect(r.wide, `${tab}: elements wider than the viewport`).toEqual([])
       if (vp.touch) expect(r.small, `${tab}: controls under 44 px`).toEqual([])
+      expect(r.tall, `${tab}: header buttons wrapped onto two lines`).toEqual([])
+      expect(r.selectedVisible, `${tab}: selected tab scrolled out of view`).toBe(true)
     }
     await context.close()
   })

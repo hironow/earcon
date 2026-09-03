@@ -7,7 +7,7 @@
   --rule-strong: #2c353f;
   --ink: #e6eaee;
   --ink-muted: #8a95a1;
-  --ink-dim: #55606b;
+  --ink-dim: #7d8894; /* 4.6:1 on the panel; was #55606b at 2.7:1 */
   --led-off: #2b333c;
   --watch: #35d39a;
   --warn: #f5b120;
@@ -41,6 +41,10 @@
   box-sizing: border-box;
 }
 
+html {
+  scroll-padding-top: var(--rail-h);
+}
+
 html,
 body {
   margin: 0;
@@ -71,8 +75,9 @@ select {
   top: 0;
   z-index: 10;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: calc(var(--u) * 3);
+  gap: var(--u) calc(var(--u) * 3);
   min-height: var(--rail-h);
   padding: 0 calc(var(--pad-x) + var(--safe-r)) 0 calc(var(--pad-x) + var(--safe-l));
   background: linear-gradient(180deg, #14191f 0%, #0f1317 100%);
@@ -167,6 +172,7 @@ select {
   background: var(--panel-2);
   font-family: var(--font-display);
   font-size: 14px;
+  white-space: nowrap;
   touch-action: manipulation;
   font-weight: 500;
   letter-spacing: 0.1em;
@@ -286,7 +292,6 @@ select.num {
   border-bottom: 1px solid var(--rule);
   overflow-x: auto;
   scrollbar-width: none;
-  scroll-snap-type: x proximity;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -295,7 +300,6 @@ select.num {
 }
 
 .tab {
-  scroll-snap-align: start;
   min-height: var(--control-h);
 }
 
@@ -540,6 +544,28 @@ select.num {
   font-size: 13px;
 }
 
+@media (max-width: 1000px) {
+  .rail__brand small {
+    display: none;
+  }
+}
+
+/* Short or narrow screens: the rail scrolls away instead of eating the viewport */
+@media (max-width: 720px), (max-height: 500px) {
+  .rail {
+    position: static;
+  }
+  html {
+    scroll-padding-top: 0;
+  }
+}
+
+@media (max-height: 500px) {
+  .rack__intro {
+    display: none;
+  }
+}
+
 @media (max-width: 720px) {
   :root {
     --pad-x: calc(var(--u) * 2);
@@ -639,6 +665,12 @@ select.num {
   font-size: 11px;
   color: var(--level-color);
   white-space: nowrap;
+}
+
+@media (pointer: coarse) {
+  .track__label {
+    font-size: 13px;
+  }
 }
 
 /* Neighbouring labels alternate above / below the ticks so they never collide on narrow tracks */
@@ -838,6 +870,7 @@ select.num {
 
 .config__actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
 }
 
@@ -855,7 +888,7 @@ select.num {
   color: var(--ink-dim);
 }
 
-@media (max-width: 900px) {
+@media (max-width: 860px) {
   .sim {
     grid-template-columns: 1fr;
   }
@@ -865,6 +898,12 @@ select.num {
 }
 
 @media (max-width: 400px) {
+  .levels .num {
+    width: 62px;
+  }
+  .levels input[aria-label$='の id'] {
+    width: 72px !important;
+  }
   .readout {
     grid-template-columns: 1fr;
   }
@@ -941,10 +980,36 @@ select.num {
   gap: 12px;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 860px) {
   .designer {
     grid-template-columns: 1fr;
   }
+}
+
+/* Collapsible fieldsets (details) share the fieldset look */
+details.fieldset > summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 0 6px;
+  min-height: var(--control-h);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+details.fieldset > summary::before {
+  content: '▸';
+  color: var(--ink-dim);
+  font-size: 12px;
+}
+
+details.fieldset[open] > summary::before {
+  content: '▾';
+}
+
+details.fieldset > summary::-webkit-details-marker {
+  display: none;
 }
 
 /* ---------------------------------------------------------------- wallets */

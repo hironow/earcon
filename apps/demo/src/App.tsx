@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { ArbiterPolicy } from '@earcon/core'
 import { NotifierProvider, UnlockGate, useToneNotifier } from '@earcon/react'
 import { Auditioner } from './auditioner/Auditioner'
@@ -37,6 +37,18 @@ function Shell({ policy, onPolicy }: { policy: ArbiterPolicy; onPolicy: (p: Arbi
   const notifier = useToneNotifier()
   const [tab, setTab] = useState<Tab>('auditioner')
   const [masterDb, setMasterDb] = useState(-6)
+
+  // Narrow screens scroll the tab strip; keep the selected tab visible after a switch.
+  useEffect(() => {
+    const strip = document.querySelector<HTMLElement>('.tabs')
+    const el = strip?.querySelector<HTMLElement>('.tab[aria-selected="true"]')
+    if (!strip || !el) return
+    const left = el.offsetLeft
+    const right = left + el.offsetWidth
+    const margin = 16
+    if (left - margin < strip.scrollLeft) strip.scrollLeft = left - margin
+    else if (right + margin > strip.scrollLeft + strip.clientWidth) strip.scrollLeft = right + margin - strip.clientWidth
+  }, [tab])
 
   return (
     <>

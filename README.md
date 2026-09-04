@@ -117,6 +117,8 @@ Verified automatically in Chromium (Playwright, including the 90-second hidden-t
 
 ## Demo
 
+Live: https://hironow.github.io/earcon/ (deployed from `main` by GitHub Pages).
+
 ```sh
 just install
 just dev        # http://localhost:5173

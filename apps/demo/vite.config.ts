@@ -5,6 +5,8 @@ import { defineConfig } from 'vite'
 const src = (pkg: string) => fileURLToPath(new URL(`../../packages/${pkg}/src/index.ts`, import.meta.url))
 
 export default defineConfig({
+  // GitHub Pages serves the demo under /earcon/; local dev and Playwright use /.
+  base: process.env.DEMO_BASE ?? '/',
   plugins: [react()],
   resolve: {
     alias: {

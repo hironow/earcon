@@ -50,9 +50,15 @@ lint: typecheck semgrep
 # The full local gate
 check: lint test test-core
 
-# Verify what `bun publish` would ship from each package
+# Verify what would ship: list each tarball (bun pm pack --dry-run)
 publish-dry:
     bun run --filter './packages/*' publish:dry
+
+# Pack the publishable tarballs into dist-pack/ and prove workspace:/catalog:
+# were resolved and nothing unexpected is inside (the release workflow publishes
+# exactly these files)
+pack:
+    bun run scripts/pack-check.ts
 
 # Dependency vulnerability audit (CI gate; locally needs registry.npmjs.org reachable)
 audit:

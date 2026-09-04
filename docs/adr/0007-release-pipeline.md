@@ -1,7 +1,7 @@
 # 0007. Release pipeline: build with bun, publish with the npm CLI over OIDC
 
 **Date:** 2026-09-04
-**Status:** Accepted
+**Status:** Superseded by [0008](0008-release-tarballs-from-bun-uploaded-by-npm.md)
 
 ## Context
 

@@ -1,15 +1,18 @@
 name: release
 
 # Publishes @earcon/* with npm Trusted Publishing (OIDC). No secrets are used.
+# Tarballs come from `bun pm pack` (resolves workspace:/catalog:); the npm CLI
+# from actions/setup-node (Node 24 → npm ≥ 11.5.1) only uploads them (ADR-0008).
 # Bootstrap (first release, trusted publisher setup) is manual: docs/release.md.
 
 on:
   push:
+    branches: [main]
     tags: ["v*"]
   workflow_dispatch:
     inputs:
       dry_run:
-        description: "Pack only, do not publish"
+        description: "Pack and verify only, do not publish"
         type: boolean
         default: true
 
@@ -18,7 +21,7 @@ permissions:
 
 jobs:
   version:
-    # Opens/updates the "Version Packages" PR when changesets are pending on main.
+    # Opens/updates the "Version Packages" PR while changesets are pending on main.
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -30,10 +33,11 @@ jobs:
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
           bun-version: "1.4.0"
+      - uses: extractions/setup-just@dd310ad5a97d8e7b41793f8ef055398d51ad4de6 # v2
       - run: bun install --frozen-lockfile
       - uses: changesets/action@8488615a623b1b9c987934bb89eae8af6a946ac1 # v2.1.1
         with:
-          version: bunx changeset version
+          version: just release-version # changeset version + bun install --lockfile-only
           commit: "chore(release): version packages"
           title: "chore(release): version packages"
         env:
@@ -42,7 +46,7 @@ jobs:
   publish:
     if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest # GitHub-hosted: required for Trusted Publishing
-    timeout-minutes: 30
+    timeout-minutes: 40
     permissions:
       contents: read
       id-token: write # OIDC token for npm Trusted Publishing
@@ -52,16 +56,48 @@ jobs:
         with:
           bun-version: "1.4.0"
       - uses: extractions/setup-just@dd310ad5a97d8e7b41793f8ef055398d51ad4de6 # v2
+      - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
+      - run: uv tool install semgrep==1.176.0
+      # ubuntu-latest ships npm 10.9.x; Trusted Publishing needs npm ≥ 11.5.1 and Node ≥ 22.14.
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: "24"
+      - name: Check npm version for Trusted Publishing
+        run: |
+          node --version
+          npm --version
+          node -e 'const [a,b,c]=process.versions.npm.split(".").map(Number); if (a<11 || (a===11 && (b<5 || (b===5 && c<1)))) { console.error("npm >= 11.5.1 required"); process.exit(1) }'
       - run: bun install --frozen-lockfile
       - run: bun audit --audit-level=high
-      - run: just lint
-      - run: just test
-      - run: just test-core
+      - run: just check
       - run: just build
-      - run: just publish-dry
-      - name: Publish (npm CLI for OIDC + provenance; bun publish lacks both, ADR-0007)
+      - run: just pack
+      - name: Tag must match every package version
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          for pkg in core engine-tone react; do
+            v=$(node -p "require('./packages/$pkg/package.json').version")
+            if [ "$v" != "$tag" ]; then echo "packages/$pkg is $v, tag is $tag"; exit 1; fi
+          done
+      - name: Publish tarballs (npm Trusted Publishing; provenance is added by npm)
         if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.dry_run) }}
         run: |
-          for pkg in core engine-tone react; do
-            (cd "packages/$pkg" && bunx npm@latest publish --access public --provenance --registry https://registry.npmjs.org)
+          for tgz in dist-pack/*.tgz; do
+            npm publish "$tgz" --access public --registry https://registry.npmjs.org
           done
+      - name: Verify provenance attestations (npm's publish-time scan may delay visibility)
+        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.dry_run) }}
+        continue-on-error: true
+        run: |
+          ver=$(node -p "require('./packages/core/package.json').version")
+          for i in $(seq 1 20); do
+            ok=1
+            for pkg in core engine-tone react; do
+              npm view "@earcon/$pkg@$ver" dist.attestations --json --registry https://registry.npmjs.org | grep -q provenance || ok=0
+            done
+            if [ "$ok" = 1 ]; then echo "attestations present"; exit 0; fi
+            sleep 45
+          done
+          echo "no provenance attestation visible after 15 minutes — check manually (docs/release.md)"
+          exit 1

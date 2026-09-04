@@ -47,8 +47,9 @@ Nothing in flight. Next milestone is M4.
 - `bun audit` depends on npm's advisories endpoint, which answered 503 / 27 s on
   2026-09-04. It runs in CI (`ci.yaml`, `release.yaml`) and via `just audit`, but is
   deliberately not part of `just check` so the local gate stays deterministic.
-- This machine's global `~/.npmrc` points at the mirror `npm.flatt.tech`; the
-  project `bunfig.toml` overrides it for this repository only.
+- A developer's global `~/.npmrc` may point at a private npm mirror; the project
+  `bunfig.toml` pins the public registry for this repository so `bun.lock` stays
+  reproducible. Do not commit a lockfile that references a mirror.
 
 - `.github/workflows/ci.yaml` has never run (no remote). Verify on first push.
 - `bun publish` needs npm login and the `@earcon` org; deferred until a remote exists.

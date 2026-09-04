@@ -1,8 +1,15 @@
 # AGENTS.md — earcon
 
-Repository-specific instructions. The global baseline (`~/.claude-work-a/AGENTS.md`:
-bun only, just only, `.yaml` only, TDD, Tidy First, Conventional Commits) applies
-unchanged; this file only adds what is specific here.
+Instructions for humans and coding agents working in this repository.
+
+## Baseline
+
+- Package manager and test runner: bun only (never npm/yarn/pnpm for installs).
+- Task runner: `just`, one `justfile` at the root.
+- Config files use `.yaml`, never `.yml`.
+- TDD (red → green → refactor); structural and behavioural changes in separate
+  commits; Conventional Commits with the package as scope (`feat(core): …`).
+- Never weaken a gate to make it pass; fix the cause.
 
 ## What this repo is
 

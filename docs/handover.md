@@ -1,6 +1,6 @@
 # Handover
 
-**Last updated:** 2026-09-04 13:30 (JST)
+**Last updated:** 2026-09-04 14:00 (JST)
 **Updated by:** Claude Code session 01LXPmm8VuMHBjo4Q6k7tRtq
 
 ## Current State
@@ -17,19 +17,19 @@ CodeQL are on, aligned with `hironow/firepact` and `hironow/tablecodec`.
 
 ## In Progress
 
-- PR #4 (Dependabot, 4 GitHub Actions SHA bumps) — needs a look; CI validates it.
+- Nothing in flight.
 
 ## Next Actions
 
-1. Decide on Dependabot PR #4 (merge if `check`/`e2e` are green; SHA pins are required
-   by the Actions policy, Dependabot honours that).
+1. Re-check Dependabot's bun.lock v2 support now and then (see Known Risks); until
+   then `bun audit` in CI is the dependency gate.
 2. Listen to the 28 presets on real devices; tune the single-level band width
    (ADR-0001 D6) if it feels off. Any change: changeset → PR → version PR → tag.
 3. Optional hardening, as in the sibling repos: `actions/attest-build-provenance` on
    the packed tarballs; `npm trust … --env release` to pin the trusted publisher to
    the environment; `npm stage publish` as a second gate (trust already allows it).
-4. Bring the sibling repos' `main` under the same PR-only ruleset if wanted (only
-   earcon has it today).
+4. Sibling repos now share the PR-only `main` ruleset, secret-scanning extras and
+   CodeQL (2026-09-04); their handover/release docs were delegated and reviewed.
 
 ## Known Risks / Blockers
 
@@ -37,8 +37,10 @@ CodeQL are on, aligned with `hironow/firepact` and `hironow/tablecodec`.
   `workspace:*` from the lockfile. `just release-version` runs
   `scripts/sync-lock-versions.ts` and `just pack` rejects mismatches. Re-check when
   bun changes this.
-- `bun audit` depends on npm's advisories endpoint (503/slow on 2026-09-04); it runs
-  in CI but is not part of `just check`.
+- Dependabot cannot parse `bun.lock` v2, so its bun version updates fail and its
+  alert list is blind; `bun audit --audit-level=high` in CI is the only dependency
+  vulnerability gate (docs/release.md). It depends on npm's advisories endpoint
+  (503/slow on 2026-09-04) and is not part of `just check`.
 - The bot's "Version Packages" PR needs its workflow run approved before required
   checks can pass (`gh api -X POST repos/hironow/earcon/actions/runs/<id>/approve`).
 - Firefox/Safari are supported targets but only Chromium is tested automatically.

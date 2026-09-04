@@ -31,6 +31,8 @@ ADR-0007); background: `docs/research/2026-09-04-bun-publish-secure-release.md`.
 `.github/workflows/release.yaml`, job `publish`, on a `v*` tag (or manual dispatch,
 dry-run by default):
 
+0. The job waits in the `release` environment until the required reviewer approves
+   it in the run's page (ADR-0011). Nothing is uploaded before that click.
 1. GitHub-hosted runner, `permissions: id-token: write`, every action pinned by SHA,
    semgrep pinned, Node 24 via setup-node with an explicit npm ≥ 11.5.1 check.
 2. `bun install --frozen-lockfile`, `bun audit --audit-level=high`, `just check`,

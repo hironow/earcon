@@ -1,6 +1,6 @@
 # Intent
 
-**Last updated:** 2026-09-04
+**Last updated:** 2026-09-04 (post-release refresh)
 **Requester:** hironow
 **Work unit:** earcon v0.1 — implement the private spec `earcon-spec.md` v0.1
 
@@ -33,15 +33,18 @@ sensor, heartbeat).
 - Visual notification UI beyond the headless unlock / mute / acknowledge controls
 - Bundled audio samples (everything is synthesized), CommonJS output
 - A graph-based sound editor (the Sound Designer is form-based)
-- Executing `bun publish` and the demo deploy — both wait for an explicit GO
+- Publishing or deploying without an explicit GO from the requester (0.0.1 was
+  published on 2026-09-04 with that GO; later releases follow `docs/release.md`)
 
 ## Constraints
 
 - Differentiators D1 (metaphor presets) and D2 (rate output + ETA input) must not be
   weakened; changes touching them need requester confirmation before implementation
 - bun / just / tsdown / Playwright / Semgrep / changesets toolchain; ESM only
-- No git remote yet: commit to `main` directly, no PRs, CI workflow unverified
+- Repository `github.com/hironow/earcon` (public); releases via npm Trusted
+  Publishing from GitHub Actions, never with a stored token
 
 ## Open Questions
 
-- [ ] npm org `earcon` availability (checked at publish time)
+- [x] npm org `earcon` — created 2026-09-04, packages published under it
+- [ ] Publish directly from CI or stage for human approval (`npm stage publish`)

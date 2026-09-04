@@ -1,5 +1,10 @@
 # earcon
 
+[![npm](https://img.shields.io/npm/v/@earcon/core?label=npm%20%40earcon%2F*)](https://www.npmjs.com/org/earcon)
+[![CI](https://github.com/hironow/earcon/actions/workflows/ci.yaml/badge.svg)](https://github.com/hironow/earcon/actions/workflows/ci.yaml)
+[![Demo](https://img.shields.io/badge/demo-GitHub%20Pages-0a0c0f)](https://hironow.github.io/earcon/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 Not a notification library that sounds when something *happened* — a sonification hook that sounds when something is *approaching*.
 
 `earcon` maps a continuous value (distance to liquidation, time to a deadline, anything your app can normalize) onto the **repetition rate and pitch** of a synthesized sound. A trader can hear *how fast* things are going wrong without looking at the screen. The metaphors are ones people already know: sonar, parking sensor, heartbeat, Geiger counter, hi-lo siren.

@@ -1,6 +1,6 @@
 # Handover
 
-**Last updated:** 2026-09-04 14:00 (JST)
+**Last updated:** 2026-09-04 18:20 (JST)
 **Updated by:** Claude Code session 01LXPmm8VuMHBjo4Q6k7tRtq
 
 ## Current State
@@ -28,8 +28,10 @@ CodeQL are on, aligned with `hironow/firepact` and `hironow/tablecodec`.
 3. Optional hardening, as in the sibling repos: `actions/attest-build-provenance` on
    the packed tarballs; `npm trust … --env release` to pin the trusted publisher to
    the environment; `npm stage publish` as a second gate (trust already allows it).
-4. Sibling repos now share the PR-only `main` ruleset, secret-scanning extras and
-   CodeQL (2026-09-04); their handover/release docs were delegated and reviewed.
+4. Sibling repos share the PR-only `main` ruleset (every `ci.yaml` PR job
+   required, matched by name), secret-scanning extras, CodeQL, a relative uv
+   `exclude-newer = "7 days"` and frozen lockfile installs (2026-09-04); their
+   handover/release docs were delegated and reviewed.
 
 ## Known Risks / Blockers
 
@@ -40,7 +42,8 @@ CodeQL are on, aligned with `hironow/firepact` and `hironow/tablecodec`.
 - Dependabot cannot parse `bun.lock` v2, so its bun version updates fail and its
   alert list is blind; `bun audit --audit-level=high` in CI is the only dependency
   vulnerability gate (docs/release.md). It depends on npm's advisories endpoint
-  (503/slow on 2026-09-04) and is not part of `just check`.
+  (503 twice on 2026-09-04, hence the retry in `just audit`) and is not part of
+  `just check`.
 - The bot's "Version Packages" PR needs its workflow run approved before required
   checks can pass (`gh api -X POST repos/hironow/earcon/actions/runs/<id>/approve`).
 - Firefox/Safari are supported targets but only Chromium is tested automatically.
@@ -68,6 +71,7 @@ CodeQL are on, aligned with `hironow/firepact` and `hironow/tablecodec`.
 - `scripts/pack-check.ts`, `scripts/sync-lock-versions.ts`, `scripts/check-lazy-tone.ts` - release guards
 - `packages/react/src/store.ts` - event → sound wiring (ADR-0003)
 - `just check` - tsc -b + semgrep + bun test + core coverage gate
+- `just audit` - bun audit with a retry on registry errors (CI and release gate)
 - `just test-e2e` - Playwright (Chromium; `bunx playwright install chromium` once)
 - `just build && just pack` - dist + publishable tarballs in `dist-pack/`
 - `just release-version` - changeset version + lockfile sync (CI runs it)

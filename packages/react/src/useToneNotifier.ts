@@ -1,4 +1,4 @@
-import { useCallback, useState, useSyncExternalStore } from 'react'
+import { useCallback, useSyncExternalStore } from 'react'
 import type { EngineStatus } from '@earcon/core'
 import { useNotifierContext } from './context'
 
@@ -23,17 +23,15 @@ export function useToneNotifier(): ToneNotifier {
     () => engine?.status ?? 'locked',
     () => 'locked',
   )
-  const [muted, setMutedState] = useState(false)
+  const muted = useSyncExternalStore(
+    store ? store.subscribeGlobal : noop,
+    () => store?.getMuted() ?? false,
+    () => false,
+  )
 
   const unlock = useCallback(() => engine?.unlock() ?? Promise.resolve(), [engine])
   const resume = useCallback(() => engine?.resume() ?? Promise.resolve(), [engine])
-  const setMuted = useCallback(
-    (m: boolean) => {
-      setMutedState(m)
-      engine?.setMuted(m)
-    },
-    [engine],
-  )
+  const setMuted = useCallback((m: boolean) => store?.setMuted(m), [store])
   const setMasterVolume = useCallback((db: number) => engine?.setMasterVolume(db), [engine])
   const acknowledgeAll = useCallback(() => store?.acknowledgeAll(), [store])
 

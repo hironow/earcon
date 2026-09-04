@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test } from 'bun:test'
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
-import { useRef } from 'react'
+import { StrictMode, useRef } from 'react'
 import type { Level, MonitorEvent } from '@earcon/core'
 import { createMockEngine, type MockEngine } from '../../../tests/utils/mock-engine'
 import { NotifierProvider, UnlockGate, useMonitor, useToneNotifier } from './index'
@@ -126,6 +126,34 @@ function Controls() {
     </div>
   )
 }
+
+describe('StrictMode', () => {
+  test('exactly one live tick loop after mount, none after unmount', () => {
+    const { unmount } = render(
+      <StrictMode>
+        <NotifierProvider engine={engine}>
+          <Wallet id="w1" />
+        </NotifierProvider>
+      </StrictMode>,
+    )
+    expect(engine.ticks.filter((t) => !t.cancelled)).toHaveLength(1)
+    unmount()
+    expect(engine.ticks.filter((t) => !t.cancelled)).toHaveLength(0)
+  })
+
+  test('muted is shared between consumers', () => {
+    render(
+      <NotifierProvider engine={engine}>
+        <Controls />
+        <Controls />
+      </NotifierProvider>,
+    )
+    const [a, b] = screen.getAllByTestId('muted')
+    fireEvent.click(screen.getAllByText('mute')[0]!)
+    expect(a!.textContent).toBe('true')
+    expect(b!.textContent).toBe('true')
+  })
+})
 
 describe('useToneNotifier and UnlockGate', () => {
   test('status follows the engine; mute, volume and acknowledgeAll reach the engine/store', () => {

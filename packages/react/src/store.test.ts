@@ -25,6 +25,7 @@ beforeEach(() => {
     tickIntervalSec: 1,
     staleRepeatSec: 10,
   })
+  store.start()
 })
 
 describe('NotifierStore wiring (spec §5.4 / §5.5)', () => {
@@ -207,6 +208,65 @@ describe('NotifierStore wiring (spec §5.4 / §5.5)', () => {
     store.start()
     engine.tick(15_002)
     expect(store.getState('a').stale).toBe(true)
+  })
+
+  test('creating a store schedules nothing until start() (StrictMode-safe)', () => {
+    const e2 = createMockEngine('ready')
+    const s2 = createNotifierStore({ engine: e2 })
+    expect(e2.log).toEqual([])
+    s2.start()
+    expect(e2.log).toEqual(['repeat:1'])
+    s2.stop()
+    expect(e2.ticks.filter((t) => !t.cancelled)).toHaveLength(0)
+  })
+
+  test('an accepted sample without events still notifies subscribers (velocity/eta/lastSample changed)', () => {
+    store.addMonitor({ id: 'a', direction: 'decreasing', levels })
+    let n = 0
+    store.subscribe('a', () => n++)
+    store.update('a', 0.035, 0)
+    expect(n).toBe(1)
+    store.update('a', 0.03501, 1000) // intensity change < 1e-3 → no events, but a new state
+    expect(n).toBe(2)
+    store.update('a', 0.03501, 500) // stale timestamp → rejected → no notify
+    expect(n).toBe(2)
+  })
+
+  test('muted is shared state on the store', () => {
+    let n = 0
+    store.subscribeGlobal(() => n++)
+    expect(store.getMuted()).toBe(false)
+    store.setMuted(true)
+    expect(store.getMuted()).toBe(true)
+    expect(engine.log).toContain('muted:true')
+    expect(n).toBe(1)
+  })
+
+  test('configure with new sounds rebuilds the affected level sounds of existing monitors', () => {
+    store.addMonitor({ id: 'a', direction: 'decreasing', levels })
+    store.update('a', 0.035, 0)
+    expect(cont('a', 'parkingSensor').started).toBe(true)
+    store.configure({ sounds: { warn: { kind: 'preset', id: 'geiger' }, critical: { kind: 'preset', id: 'hiLoSiren' } } })
+    expect(engine.log).toContain('cont:a/parkingSensor:stop')
+    expect(engine.log).toContain('cont:a/parkingSensor:dispose')
+    expect(cont('a', 'geiger').started).toBe(true)
+    // unchanged levels keep their instances
+    store.update('a', 0.01, 1000)
+    const siren = cont('a', 'hiLoSiren')
+    store.configure({ sounds: { warn: { kind: 'preset', id: 'geiger' }, critical: { kind: 'preset', id: 'hiLoSiren' } } })
+    expect(cont('a', 'hiLoSiren')).toBe(siren)
+    expect(engine.log.filter((l) => l === 'cont:a/hiLoSiren:dispose')).toHaveLength(0)
+  })
+
+  test('configure with new transitions drops the cached one-shots', () => {
+    store.addMonitor({ id: 'a', direction: 'decreasing', levels, staleAfterMs: 15_000 })
+    store.update('a', 0.035, 0)
+    engine.tick(15_001)
+    expect(engine.oneShots.get('a/knock')!.plays).toBe(1)
+    store.configure({ transitions: { stale: { kind: 'preset', id: 'buzzer' } } })
+    expect(engine.log).toContain('shot:a/knock:dispose')
+    engine.tick(25_001)
+    expect(engine.oneShots.get('a/buzzer')!.plays).toBe(1)
   })
 
   test('default sounds (ADR-0001 §16) are used when the provider gives none', () => {

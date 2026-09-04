@@ -50,7 +50,11 @@ export interface NotifierStore {
   acknowledgeAll(): void
   getState(id: string): MonitorState
   subscribe(id: string, cb: () => void): () => void
-  /** Start the watchdog tick loop (idempotent). Called at creation and by the provider's effect. */
+  /** Global (non-monitor) state: mute. */
+  getMuted(): boolean
+  setMuted(muted: boolean): void
+  subscribeGlobal(cb: () => void): () => void
+  /** Start the watchdog tick loop (idempotent). Nothing is scheduled until this is called. */
   start(): void
   /** Stop the tick loop; `start()` resumes it. Survives React StrictMode's mount/unmount/mount. */
   stop(): void
@@ -115,7 +119,9 @@ export function createNotifierStore(initial: NotifierConfig): NotifierStore {
     cancelTick?.()
     cancelTick = null
   }
-  start()
+
+  let muted = false
+  const globalListeners = new Set<() => void>()
 
   // ---------------------------------------------------------------- helpers
 
@@ -223,10 +229,30 @@ export function createNotifierStore(initial: NotifierConfig): NotifierStore {
   return {
     configure(patch) {
       if (patch.sounds !== undefined) sounds = patch.sounds
-      if (patch.transitions !== undefined) transitions = patch.transitions
+      if (patch.transitions !== undefined) {
+        const changed = !sameSpecs(transitions, patch.transitions)
+        transitions = patch.transitions
+        if (changed) {
+          for (const entry of entries.values()) {
+            for (const s of entry.oneShots.values()) s.dispose()
+            entry.oneShots.clear()
+          }
+        }
+      }
       if (patch.policy !== undefined) policy = patch.policy
       if (patch.staleRepeatSec !== undefined) staleRepeatSec = patch.staleRepeatSec
-      for (const entry of entries.values()) entry.sounds = merge(sounds, entry.extras.sounds)
+      for (const entry of entries.values()) {
+        const next = merge(sounds, entry.extras.sounds)
+        // Drop cached level sounds whose spec changed so the next sync rebuilds them.
+        for (const [level, sound] of entry.continuous) {
+          if (!sameSpec(entry.sounds[level], next[level])) {
+            if (entry.playing?.sound === sound) stopPlaying(entry)
+            sound.dispose()
+            entry.continuous.delete(level)
+          }
+        }
+        entry.sounds = next
+      }
       sync()
     },
     addMonitor(opts, extras = {}) {
@@ -261,8 +287,10 @@ export function createNotifierStore(initial: NotifierConfig): NotifierStore {
     update(id, value, t) {
       const entry = entries.get(id)
       if (!entry) return
+      const before = entry.monitor.state
       const events = entry.monitor.update({ value, t })
       if (events.length) handle(id, entry, events, t)
+      else if (entry.monitor.state !== before) notify(id) // accepted sample, no events: velocity/eta/lastSample moved
     },
     acknowledge(id) {
       const entry = entries.get(id)
@@ -295,6 +323,17 @@ export function createNotifierStore(initial: NotifierConfig): NotifierStore {
         if (set.size === 0) listeners.delete(id)
       }
     },
+    getMuted: () => muted,
+    setMuted(m) {
+      if (muted === m) return
+      muted = m
+      engine.setMuted(m)
+      for (const cb of globalListeners) cb()
+    },
+    subscribeGlobal(cb) {
+      globalListeners.add(cb)
+      return () => globalListeners.delete(cb)
+    },
     start,
     stop,
     dispose() {
@@ -302,6 +341,17 @@ export function createNotifierStore(initial: NotifierConfig): NotifierStore {
       for (const id of [...entries.keys()]) this.removeMonitor(id)
     },
   }
+}
+
+function sameSpec(a: SoundSpec | undefined, b: SoundSpec | undefined): boolean {
+  if (a === b) return true
+  if (!a || !b) return false
+  if (a.kind === 'custom' || b.kind === 'custom') return a === b
+  return JSON.stringify(a) === JSON.stringify(b)
+}
+
+function sameSpecs(a: TransitionSounds, b: TransitionSounds): boolean {
+  return sameSpec(a.toSafe, b.toSafe) && sameSpec(a.stale, b.stale) && sameSpec(a.escalate, b.escalate)
 }
 
 function merge(base: Record<string, SoundSpec>, override?: Partial<Record<string, SoundSpec>>): Record<string, SoundSpec> {

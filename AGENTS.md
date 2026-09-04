@@ -31,6 +31,12 @@ A bun workspace publishing three ESM packages (`@earcon/core`, `@earcon/engine-t
 - Unit tests are colocated (`src/*.test.ts`, `bun:test`). Playwright tests live in
   `tests/e2e/`. No mocks in e2e.
 
+## Git
+
+`main` is pull-request only (repository ruleset, no bypass). Branch, push, open a
+PR, wait for `check` and `e2e`, squash-merge. Version bumps arrive as the bot's
+"Version Packages" PR; approve its workflow run, then merge it.
+
 ## Release
 
 Publishing goes through `.github/workflows/release.yaml` with npm Trusted

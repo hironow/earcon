@@ -20,7 +20,9 @@ jobs:
           bun-version: "1.4.0"
       - uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4.0.0
       - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
-      - run: uv tool install semgrep==1.176.0
+      # 1.175.0 is shared with firepact and tablecodec, whose screened index only
+      # carries releases older than their seven-day window; bump all three together.
+      - run: uv tool install semgrep==1.175.0
       - run: bun install --frozen-lockfile
       - run: just audit # bun audit with a retry on registry errors
       - run: just lint

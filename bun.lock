@@ -33,7 +33,7 @@
     },
     "packages/core": {
       "name": "@earcon/core",
-      "version": "0.0.0",
+      "version": "0.0.1",
       "devDependencies": {
         "tsdown": "catalog:",
         "typescript": "catalog:",
@@ -41,7 +41,7 @@
     },
     "packages/engine-tone": {
       "name": "@earcon/engine-tone",
-      "version": "0.0.0",
+      "version": "0.0.1",
       "dependencies": {
         "@earcon/core": "workspace:*",
       },
@@ -56,7 +56,7 @@
     },
     "packages/react": {
       "name": "@earcon/react",
-      "version": "0.0.0",
+      "version": "0.0.1",
       "dependencies": {
         "@earcon/core": "workspace:*",
       },

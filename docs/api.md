@@ -53,6 +53,16 @@ milliseconds to `cb`.
 
 `{ kind: 'preset', id }` | `SynthSpec` | `{ kind: 'custom', factory }`.
 
+### `validateSynthSpec(input: unknown): string[]`, `isSynthSpec(input): input is SynthSpec`
+
+Structural validation for pasted or generated specs; every problem is returned as
+`path: reason`. Enforced: enum fields, envelope ranges, `volume` in
+`[-60, 6]` dB, `rate.minHz`/`maxHz` in `[0.05, 60]` Hz with `maxHz >= minHz`,
+note names matching `NOTE_NAME` (`C4`, `F#3`, `Bb-1`), strictly increasing
+`pattern[].offset` and `notes[].at` (one monophonic voice cannot re-attack at the
+same instant), at most 64 hits. The bounds are exported as `SYNTH_SPEC_LIMITS`.
+`fromSpec` runs the same validation and throws with the joined list.
+
 `SynthSpec` (JSON-serializable): `kind: 'synth'`, `mode: 'continuous' | 'oneShot'`,
 `voice`, `oscillator?`, `envelope`, `volume`, `fx?: { delay?, filter? }`; continuous:
 `rate? { minHz, maxHz, curve? }`, `pitch? { base, semitonesAtMax }`, `pattern?`;
@@ -85,6 +95,12 @@ the main entry stays Tone-free and reaches it lazily for `{ kind: 'synth' }` spe
 (`import spec from '@earcon/engine-tone/specs/sonar'`).
 
 ## `@earcon/react`
+
+### `DEFAULT_SOUNDS`, `DEFAULT_TRANSITIONS`
+
+The provider defaults as plain objects (`{ watch: sonar, warn: parkingSensor,
+critical: hiLoSiren }` and `{ toSafe: allClear, stale: knock }`), exported so an app
+can extend them instead of restating them.
 
 ### `<NotifierProvider engine sounds? transitions? policy? tickIntervalSec? staleRepeatSec?>`
 

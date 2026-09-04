@@ -17,7 +17,7 @@ sensor, heartbeat).
 - Spec §4.5 (engine, real browser via Playwright) and §5.5 (React wiring with a
   mock engine) tests green
 - `just lint` green (types + Semgrep)
-- All 14 presets audible in the demo; 50× start/stop leaves the audio graph stable
+- All 28 presets audible in the demo; 50× start/stop leaves the audio graph stable
 - README Quick start reaches "a sound plays" within 5 minutes
 - Every deviation from the spec is recorded as an ADR
 

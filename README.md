@@ -83,7 +83,7 @@ value ──▶ Monitor ──▶ level (with hysteresis) ──▶ continuous s
 `sounds` on the provider (or per monitor) maps level ids to a `SoundSpec`:
 
 ```ts
-{ kind: 'preset', id: 'heartbeat' }          // one of the 14 presets
+{ kind: 'preset', id: 'heartbeat' }          // one of the 28 presets
 { kind: 'synth', mode: 'continuous', ... }   // a declarative SynthSpec (JSON), see the Sound Designer in the demo
 { kind: 'custom', factory: (ctx) => sound }  // your own Tone.js code
 ```

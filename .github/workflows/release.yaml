@@ -76,7 +76,7 @@ jobs:
             echo "npm >= 11.5.1 required for Trusted Publishing, got $v"; exit 1
           fi
       - run: bun install --frozen-lockfile
-      - run: bun audit --audit-level=high
+      - run: just audit # bun audit with a retry on registry errors
       - run: just check
       - run: just build
       - run: just pack

@@ -114,10 +114,14 @@ Trusted publishing cannot be configured for a package that does not exist yet.
 - Dependabot cannot read `bun.lock` (`lockfileVersion` 2, written by bun 1.4 for
   catalogs; Dependabot's bun supports version 1 as of 2026-09-04), so Dependabot
   version updates for bun fail and **an empty Dependabot alert list proves
-  nothing**. The only working dependency-vulnerability gate is
-  `bun audit --audit-level=high` in `ci.yaml` (part of the required `check`) and
-  in `release.yaml`. Do not remove it. Re-check Dependabot's bun support
+  nothing**. The only working dependency-vulnerability gate is `just audit`
+  (`bun audit --audit-level=high`) in `ci.yaml` (part of the required `check`)
+  and in `release.yaml`. Do not remove it. Re-check Dependabot's bun support
   periodically; alerts may appear all at once when it lands.
+- `just audit` retries only on a registry or transport error (npm's advisories
+  endpoint answered 503 twice on 2026-09-04), with delays from
+  `AUDIT_RETRY_DELAYS` (default `20 60` seconds), then fails. A real finding
+  fails on the first attempt; the gate is never downgraded to a warning.
 - GitHub Actions bumps still work (`.github/dependabot.yaml`, github-actions
   ecosystem).
 

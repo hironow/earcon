@@ -77,6 +77,7 @@ export function createToneEngine(opts: ToneEngineOptions = {}): Engine {
   let masterDb = opts.masterVolumeDb ?? DEFAULT_MASTER_DB
   let muted = false
   let unlocking: Promise<void> | null = null
+  let disposed = false
   const listeners = new Set<(s: EngineStatus) => void>()
   const lazies = new Set<Lazy>()
   const busOutputs = new WeakMap<Bus, () => SoundContext>()
@@ -240,11 +241,13 @@ export function createToneEngine(opts: ToneEngineOptions = {}): Engine {
   // ---------------------------------------------------------------- lifecycle
 
   async function unlock(): Promise<void> {
-    if (status === 'unavailable' || Tone) return
+    if (status === 'unavailable' || Tone || disposed) return
     if (unlocking) return unlocking
     unlocking = (async () => {
       const [tone, loadedPresets] = await Promise.all([loadTone(), loadPresets()])
+      if (disposed) return
       await tone.start()
+      if (disposed) return // dispose() raced the user gesture: build nothing
       const context = tone.getContext()
       context.lookAhead = lookAhead
       master = new tone.Gain(masterDb, 'decibels').connect(tone.getDestination())
@@ -287,6 +290,7 @@ export function createToneEngine(opts: ToneEngineOptions = {}): Engine {
   if (typeof document !== 'undefined') document.addEventListener('visibilitychange', onVisibilityChange)
 
   function dispose() {
+    disposed = true
     if (typeof document !== 'undefined') document.removeEventListener('visibilitychange', onVisibilityChange)
     for (const lazy of [...lazies]) lazy.dispose()
     mute?.dispose()

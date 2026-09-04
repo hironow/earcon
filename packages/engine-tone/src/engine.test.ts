@@ -258,6 +258,27 @@ describe('createToneEngine', () => {
     expect(FakeNode.live.size).toBe(0)
   })
 
+  test('dispose() during unlock() builds nothing and leaves the engine locked', async () => {
+    let release!: () => void
+    const gate = new Promise<void>((r) => (release = r))
+    const { engine } = engineWith({
+      loadTone: async () => {
+        await gate
+        return fakeTone as unknown as typeof import('tone')
+      },
+    })
+    const bus = engine.createBus('w1')
+    engine.createContinuous({ kind: 'preset', id: 'sonar' }, bus).start(1)
+    const pending = engine.unlock()
+    engine.dispose()
+    release()
+    await pending
+    expect(engine.status).toBe('locked')
+    expect(FakeNode.live.size).toBe(0)
+    await engine.unlock() // no-op after dispose
+    expect(FakeNode.live.size).toBe(0)
+  })
+
   test('custom factory specs are called with the bus output', async () => {
     const { engine } = engineWith()
     const bus = engine.createBus('w1')

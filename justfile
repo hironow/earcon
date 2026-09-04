@@ -54,8 +54,12 @@ check: lint test test-core
 publish-dry:
     bun run --filter './packages/*' publish:dry
 
-# changesets version bump, build, publish (needs npm auth)
-release:
+# Dependency vulnerability audit (CI gate; locally needs registry.npmjs.org reachable)
+audit:
+    bun audit --audit-level=high
+
+# Releases are published by .github/workflows/release.yaml over npm Trusted
+# Publishing (ADR-0007). Locally this only bumps versions from pending changesets.
+release-version:
     bunx changeset version
-    just build
-    bun run --filter './packages/*' publish:npm
+    bun install --lockfile-only

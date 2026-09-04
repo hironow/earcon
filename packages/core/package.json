@@ -17,12 +17,12 @@
     "dist"
   ],
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
   },
   "scripts": {
     "build": "tsdown",
-    "publish:dry": "bun pm pack --dry-run",
-    "publish:npm": "bun publish"
+    "publish:dry": "bun pm pack --dry-run"
   },
   "devDependencies": {
     "tsdown": "catalog:",

@@ -7,7 +7,7 @@ Not a notification library that sounds when something *happened* — a sonificat
 | package | what it is |
 | --- | --- |
 | [`@earcon/core`](packages/core) | pure state machine: hysteresis levels, ETA-based intensity, arbiter. No DOM, no Web Audio |
-| [`@earcon/engine-tone`](packages/engine-tone) | Tone.js engine: 14 presets, per-monitor buses (pan/volume), `SynthSpec` interpreter |
+| [`@earcon/engine-tone`](packages/engine-tone) | Tone.js engine: 28 presets, per-monitor buses (pan/volume), `SynthSpec` interpreter |
 | [`@earcon/react`](packages/react) | `NotifierProvider`, `useMonitor`, `useToneNotifier`, headless `UnlockGate` |
 
 Everything is synthesized (no audio files), ESM only, React ≥ 18.
@@ -113,7 +113,7 @@ Why these: abstract tones lose half their discriminability as soon as two sound 
 
 ## Browser support
 
-Desktop Chrome, Firefox and Safari (last two versions). iOS Safari works while the tab is in the foreground; the OS suspends the AudioContext in the background, which no library can prevent. Background tabs on desktop keep their rate because the clock runs in a worker (Tone.js `Clock`).
+Verified automatically in Chromium (Playwright, including the 90-second hidden-tab check). Desktop Firefox and Safari are supported targets but only checked by hand; report what you find. iOS Safari works while the tab is in the foreground; the OS suspends the AudioContext in the background, which no library can prevent. Background tabs on desktop Chromium keep their rate because the clock runs in a worker (Tone.js `Clock`).
 
 ## Demo
 

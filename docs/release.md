@@ -45,7 +45,8 @@ dry-run by default):
 Trusted publishing cannot be configured for a package that does not exist yet.
 
 1. On npmjs.com: create the `earcon` organization, enable account 2FA.
-2. Local toolchain: Node ≥ 22.14 and npm ≥ 11.5.1 (`npm --version`).
+2. Local toolchain: Node ≥ 22.14 and npm ≥ 11.15.0 (`npm --version`; 11.5.1 is
+   enough to publish, 11.15.0 is required by `npm trust`).
 3. `just build && just pack`; read every tarball listing in `dist-pack/`
    (dist, specs, README, LICENSE only).
 4. Create a granular access token: write, packages `@earcon/core`,
@@ -53,8 +54,14 @@ Trusted publishing cannot be configured for a package that does not exist yet.
 5. For each tarball:
    `NPM_CONFIG_TOKEN=<token> npm publish dist-pack/<pkg>.tgz --access public --registry https://registry.npmjs.org`
    (`publishConfig` in each package.json also pins registry and access).
-6. For each package: `npm trust github --allow-publish` with the repository and
-   `release.yaml` as the workflow file.
+6. For each package (account 2FA must be on; the package must already exist):
+   ```sh
+   npm trust github @earcon/core --file release.yaml --repo hironow/earcon --allow-publish
+   npm trust github @earcon/engine-tone --file release.yaml --repo hironow/earcon --allow-publish
+   npm trust github @earcon/react --file release.yaml --repo hironow/earcon --allow-publish
+   npm trust list @earcon/core
+   ```
+   Replace `hironow/earcon` if the repository is created under another name.
 7. Revoke the token. Set each package to "Require two-factor authentication and
    disallow tokens".
 8. Run the workflow manually with `dry_run: true`, then make the next real release

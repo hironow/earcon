@@ -82,8 +82,15 @@ jobs:
       - name: Publish tarballs (npm Trusted Publishing; provenance is added by npm)
         if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.dry_run) }}
         run: |
-          for tgz in dist-pack/*.tgz; do
-            npm publish "$tgz" --access public --registry https://registry.npmjs.org
+          # Idempotent: a version that is already on the registry (e.g. the manual
+          # bootstrap release, or a re-run) is skipped instead of failing.
+          for pkg in core engine-tone react; do
+            ver=$(node -p "require('./packages/$pkg/package.json').version")
+            if npm view "@earcon/$pkg@$ver" version --registry https://registry.npmjs.org >/dev/null 2>&1; then
+              echo "@earcon/$pkg@$ver is already published, skipping"
+              continue
+            fi
+            npm publish "dist-pack/earcon-$pkg-$ver.tgz" --access public --registry https://registry.npmjs.org
           done
       - name: Verify provenance attestations (npm's publish-time scan may delay visibility)
         if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.dry_run) }}

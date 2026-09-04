@@ -38,9 +38,11 @@ dry-run by default):
    `catalog:` or an unexpected file).
 3. The tag must equal every package version.
 4. `npm publish dist-pack/<pkg>.tgz --access public --registry https://registry.npmjs.org`
-   for each tarball. Authentication is OIDC; npm adds provenance itself (no
-   `--provenance` flag; publishing a tarball path with provenance is not documented,
-   so the next step checks the result).
+   for each tarball whose version is not on the registry yet (already-published
+   versions are skipped, so re-runs and the manual bootstrap release are safe).
+   Authentication is OIDC; npm adds provenance itself (no `--provenance` flag;
+   publishing a tarball path with provenance is not documented, so the next step
+   checks the result).
 5. A best-effort step polls `npm view <pkg>@<ver> dist.attestations` for up to
    15 minutes (npm's publish-time malware scan delays visibility). If it reports
    nothing, check by hand once the packages are visible.

@@ -60,6 +60,13 @@ Trusted publishing cannot be configured for a package that does not exist yet.
 8. Run the workflow manually with `dry_run: true`, then make the next real release
    from a tag and confirm `dist.attestations` shows a provenance entry.
 
+## Known unknowns (verify on the first tagged release)
+
+- Whether provenance is attached when publishing a tarball path under OIDC (npm
+  documents the flag-less OIDC path for directory publishes only).
+- Whether npm's staged publishing (2026-05) requires a human approval step for
+  ordinary publishes of existing packages.
+
 ## Local checks before any release
 
 - `just check` green, `just test-e2e` green.

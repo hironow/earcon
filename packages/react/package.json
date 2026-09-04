@@ -1,6 +1,6 @@
 {
   "name": "@earcon/react",
-  "version": "0.1.0",
+  "version": "0.0.0",
   "description": "React bindings for earcon: NotifierProvider, useMonitor, useToneNotifier, headless UnlockGate.",
   "license": "MIT",
   "type": "module",

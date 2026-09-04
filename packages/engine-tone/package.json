@@ -1,6 +1,6 @@
 {
   "name": "@earcon/engine-tone",
-  "version": "0.1.0",
+  "version": "0.0.0",
   "description": "Tone.js engine for earcon: presets (sonar, parking sensor, heartbeat, siren...), buses, SynthSpec interpreter.",
   "license": "MIT",
   "type": "module",

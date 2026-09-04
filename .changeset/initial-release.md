@@ -1,7 +1,7 @@
 ---
-"@earcon/core": minor
-"@earcon/engine-tone": minor
-"@earcon/react": minor
+"@earcon/core": patch
+"@earcon/engine-tone": patch
+"@earcon/react": patch
 ---
 
 First release: monitors with hysteresis levels, ETA-based intensity, stale watchdog

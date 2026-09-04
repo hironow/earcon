@@ -45,6 +45,9 @@ dry-run by default):
 Trusted publishing cannot be configured for a package that does not exist yet.
 
 1. On npmjs.com: create the `earcon` organization, enable account 2FA.
+1. Version locally: `just release-version` consumes the initial changeset
+   (`0.0.0` → `0.0.1`, CHANGELOG.md per package, `bun.lock` refreshed). Commit as
+   `chore(release): version packages` and tag `v0.0.1` (ADR-0009).
 2. Local toolchain: Node ≥ 22.14 and npm ≥ 11.15.0 (`npm --version`; 11.5.1 is
    enough to publish, 11.15.0 is required by `npm trust`).
 3. `just build && just pack`; read every tarball listing in `dist-pack/`

@@ -13,6 +13,18 @@ ADR-0007); background: `docs/research/2026-09-04-bun-publish-secure-release.md`.
   upload step uses the npm CLI installed by `actions/setup-node` (Node 24 ships
   npm ≥ 11.5.1; the runner's own npm 10.9 is too old).
 
+## Repository rules (GitHub)
+
+- `main` accepts pull requests only (ruleset `protect`: PR required, squash merge,
+  linear history, required checks `check` and `e2e`, no bypass — not even admins).
+- `v*` tags cannot be created, moved or deleted except by admins (ruleset
+  "Protect release tags (v*)", same as firepact and tablecodec).
+- The "Version Packages" PR is opened by the GitHub Actions bot; its workflow run
+  needs a one-click approval (Actions → the run → "Approve and run", or
+  `gh api -X POST repos/hironow/earcon/actions/runs/<id>/approve`) before the
+  required checks can pass.
+- Publishing waits for a reviewer in the `release` environment (ADR-0011).
+
 ## Versioning
 
 - Changesets, `fixed` group: the three packages always share one version.

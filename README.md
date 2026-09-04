@@ -10,7 +10,8 @@ Not a notification library that sounds when something *happened* — a sonificat
 | [`@earcon/engine-tone`](packages/engine-tone) | Tone.js engine: 28 presets, per-monitor buses (pan/volume), `SynthSpec` interpreter |
 | [`@earcon/react`](packages/react) | `NotifierProvider`, `useMonitor`, `useToneNotifier`, headless `UnlockGate` |
 
-Everything is synthesized (no audio files), ESM only, React ≥ 18.
+Everything is synthesized (no audio files), ESM only, React ≥ 18. Published on npm as
+`@earcon/core`, `@earcon/engine-tone` and `@earcon/react` (one shared version).
 
 ## Quick start
 

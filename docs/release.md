@@ -69,8 +69,11 @@ Trusted publishing cannot be configured for a package that does not exist yet.
 
 ## Known unknowns (verify on the first tagged release)
 
-- Whether provenance is attached when publishing a tarball path under OIDC (npm
-  documents the flag-less OIDC path for directory publishes only).
+- Whether provenance is attached when publishing a tarball path under OIDC. The npm
+  CLI calls its OIDC path for every spec type and sets `provenance` automatically
+  on GitHub Actions (npm/cli `lib/commands/publish.js`, `lib/utils/oidc.js`,
+  read 2026-09-04); the attestation generation itself was not traced, so confirm
+  `dist.attestations` on the first tagged release.
 - Whether npm's staged publishing (2026-05) requires a human approval step for
   ordinary publishes of existing packages.
 

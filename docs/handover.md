@@ -1,6 +1,6 @@
 # Handover
 
-**Last updated:** 2026-09-04 11:10 (JST)
+**Last updated:** 2026-09-04 11:40 (JST)
 **Updated by:** Claude Code session (earcon M0)
 
 ## Current State
@@ -30,6 +30,12 @@ two-column boundary (860 px); second pass folded the Designer side sections and
 twin links on phones and compacted the rail to two rows (≤ 110 px). Re-review: all
 findings fixed, no regressions. The requester verified the demo on a real phone
 over the LAN on 2026-09-04. `just dev-lan` serves the demo on the LAN for phones.
+
+Reviews on 2026-09-04: Codex whole-repo review (13 findings: 11 adopted, 1
+rebutted with a pinning test, 1 reworded), a primary-source fact check of the
+release path, and an independent re-review (8 findings, all fixed; verdict
+"proceed after fixes"). Codex ran out of credits mid re-review; the fallback
+subagent completed it.
 
 ## In Progress
 

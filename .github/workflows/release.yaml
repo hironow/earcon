@@ -1,0 +1,67 @@
+name: release
+
+# Publishes @earcon/* with npm Trusted Publishing (OIDC). No secrets are used.
+# Bootstrap (first release, trusted publisher setup) is manual: docs/release.md.
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Pack only, do not publish"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  version:
+    # Opens/updates the "Version Packages" PR when changesets are pending on main.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version: "1.4.0"
+      - run: bun install --frozen-lockfile
+      - uses: changesets/action@8488615a623b1b9c987934bb89eae8af6a946ac1 # v2.1.1
+        with:
+          version: bunx changeset version
+          commit: "chore(release): version packages"
+          title: "chore(release): version packages"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  publish:
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest # GitHub-hosted: required for Trusted Publishing
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write # OIDC token for npm Trusted Publishing
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version: "1.4.0"
+      - uses: extractions/setup-just@dd310ad5a97d8e7b41793f8ef055398d51ad4de6 # v2
+      - run: bun install --frozen-lockfile
+      - run: bun audit --audit-level=high
+      - run: just lint
+      - run: just test
+      - run: just test-core
+      - run: just build
+      - run: just publish-dry
+      - name: Publish (npm CLI for OIDC + provenance; bun publish lacks both, ADR-0007)
+        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.dry_run) }}
+        run: |
+          for pkg in core engine-tone react; do
+            (cd "packages/$pkg" && bunx npm@latest publish --access public --provenance --registry https://registry.npmjs.org)
+          done

@@ -64,8 +64,12 @@ jobs:
       - name: Check npm version for Trusted Publishing
         run: |
           node --version
-          npm --version
-          node -e 'const [a,b,c]=process.versions.npm.split(".").map(Number); if (a<11 || (a===11 && (b<5 || (b===5 && c<1)))) { console.error("npm >= 11.5.1 required"); process.exit(1) }'
+          v=$(npm --version)
+          echo "npm $v"
+          # semver compare: the lowest of (installed, 11.5.1) must be 11.5.1
+          if [ "$(printf '%s\n' "$v" 11.5.1 | sort -V | head -n1)" != "11.5.1" ]; then
+            echo "npm >= 11.5.1 required for Trusted Publishing, got $v"; exit 1
+          fi
       - run: bun install --frozen-lockfile
       - run: bun audit --audit-level=high
       - run: just check

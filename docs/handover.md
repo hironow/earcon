@@ -1,106 +1,72 @@
 # Handover
 
 **Last updated:** 2026-09-04 13:30 (JST)
-**Updated by:** Claude Code session (earcon M0)
+**Updated by:** Claude Code session 01LXPmm8VuMHBjo4Q6k7tRtq
 
 ## Current State
 
-M0 (scaffold), M1 (`@earcon/core`: T1–T20 green, 100% coverage), M2
-(`@earcon/engine-tone`: presets, catalog, `createToneEngine`; demo Preset
-Auditioner; Playwright §4.5 + §9 leak check) and M3 (`@earcon/react`: provider,
-hooks, UnlockGate, sync-based wiring with 28 store/hook/SSR tests; demo Monitor
-Simulator with the four §7.3 scenarios covered by Playwright) are done and
-committed on `main`. `just check` and `just test-e2e` pass locally.
-
-Post-M6 additions on 2026-09-04: Simulator direction validation (requester
-report); preset catalog expanded to 28 (ADR-0005, two research surveys); chaos
-test round (Playwright MCP subagent) fixed: `validateSynthSpec` in core, Designer
-JSON crash, ErrorBoundary per tab, ticker monotonic-time guard, fromSpec build-time
-validation, engine keeps working when one queued sound fails to build, Simulator
-empty id / horizonSec / staleAfterMs validation, top-n clamp, save-name checks;
-loudness pass (Tone.Offline peak per preset, `tests/e2e/loudness.e2e.ts`) fixed
-stallWarning (too quiet), gong (clipping), squelch (too quiet); responsive pass for
-phones / foldables / dual-screen / tablets (`tests/e2e/responsive.e2e.ts`: no
-horizontal overflow on 8 viewports × 4 tabs, 44 px touch targets, safe-area insets,
-`horizontal-viewport-segments` for hinged devices); a read-only device review
-(Playwright MCP subagent) then fixed the 768–899 px header wrap, the 2.7:1
-`--ink-dim` contrast, selected-tab visibility in the scrolling strip, collapsible
-Designer fieldsets on phones, landscape-phone density, and the Fold-open
-two-column boundary (860 px); second pass folded the Designer side sections and
-twin links on phones and compacted the rail to two rows (≤ 110 px). Re-review: all
-findings fixed, no regressions. The requester verified the demo on a real phone
-over the LAN on 2026-09-04. `just dev-lan` serves the demo on the LAN for phones.
-
-Reviews on 2026-09-04: Codex whole-repo review (13 findings: 11 adopted, 1
-rebutted with a pinning test, 1 reworded), a primary-source fact check of the
-release path, and an independent re-review (8 findings, all fixed; verdict
-"proceed after fixes"). Codex ran out of credits mid re-review; the fallback
-subagent completed it.
+earcon 0.0.2 is on npm (`@earcon/core`, `@earcon/engine-tone`, `@earcon/react`, one
+shared version, SLSA provenance) and the demo is live at
+https://hironow.github.io/earcon/. The spec's M0–M6 are complete: core state machine
+(T1–T20, 100% coverage), Tone.js engine with 28 presets, React provider/hooks,
+four-tab demo, 24 Playwright checks plus a 90 s hidden-tab test. Releases flow
+changeset → bot "Version Packages" PR → `v*` tag → `release.yaml` (OIDC, reviewer
+approval in the `release` environment). `main` is PR-only with required checks;
+Dependabot, secret scanning, push protection, private vulnerability reporting and
+CodeQL are on, aligned with `hironow/firepact` and `hironow/tablecodec`.
 
 ## In Progress
 
-Nothing in flight. Next milestone is M4.
+- PR #4 (Dependabot, 4 GitHub Actions SHA bumps) — needs a look; CI validates it.
 
 ## Next Actions
 
-1. M4 `fromSpec` (replace the stub in `packages/engine-tone/src/fromSpec.ts`),
-   `specs/*.json` for sonar/parkingSensor/heartbeat/coin/chime/knock, Sound Designer tab
-3. M5 Arbiter wiring, Wallets tab, `tests/e2e/background.e2e.ts` (90 s hidden tab)
-4. M6 README Quick start, `docs/api.md`, first changeset (no publish, no deploy)
+1. Decide on Dependabot PR #4 (merge if `check`/`e2e` are green; SHA pins are required
+   by the Actions policy, Dependabot honours that).
+2. Listen to the 28 presets on real devices; tune the single-level band width
+   (ADR-0001 D6) if it feels off. Any change: changeset → PR → version PR → tag.
+3. Optional hardening, as in the sibling repos: `actions/attest-build-provenance` on
+   the packed tarballs; `npm trust … --env release` to pin the trusted publisher to
+   the environment; `npm stage publish` as a second gate (trust already allows it).
+4. Bring the sibling repos' `main` under the same PR-only ruleset if wanted (only
+   earcon has it today).
 
 ## Known Risks / Blockers
 
-- bun keeps workspace versions in `bun.lock` and `bun pm pack` resolves
-  `workspace:*` from there, but no bun command refreshes them after a version bump
-  (verified 2026-09-04 with `bun install --lockfile-only`, `--force`,
-  `bun pm version`; only a full lockfile regeneration does, and that re-resolves
-  every dependency). `just release-version` runs `scripts/sync-lock-versions.ts`
-  and `just pack` rejects mismatches. Re-check when bun changes this.
-
-- `bun audit` depends on npm's advisories endpoint, which answered 503 / 27 s on
-  2026-09-04. It runs in CI (`ci.yaml`, `release.yaml`) and via `just audit`, but is
-  deliberately not part of `just check` so the local gate stays deterministic.
-- A developer's global `~/.npmrc` may point at a private npm mirror; the project
-  `bunfig.toml` pins the public registry for this repository so `bun.lock` stays
-  reproducible. Do not commit a lockfile that references a mirror.
-
-- `.github/workflows/ci.yaml` has never run (no remote). Verify on first push.
-- `bun publish` needs npm login and the `@earcon` org; deferred until a remote exists.
-- One-shot presets use monophonic Tone synths; the engine spaces same-instant
-  `play()` calls by 10 ms (`MIN_ONESHOT_GAP_SEC`) so they do not throw.
-- React StrictMode (dev) runs effects mount → cleanup → mount. The store's tick
-  loop is therefore `start()`/`stop()`-able and the provider never `dispose()`s it
-  in an effect cleanup. Found by the Simulator stale e2e; keep that test.
-- The §9 leak check compares JS heap after forced GC (`--expose-gc`); Tone exposes
-  no node count. Threshold 4 MB growth between cycle 10 and 50.
+- bun does not copy workspace versions into `bun.lock`; `bun pm pack` resolves
+  `workspace:*` from the lockfile. `just release-version` runs
+  `scripts/sync-lock-versions.ts` and `just pack` rejects mismatches. Re-check when
+  bun changes this.
+- `bun audit` depends on npm's advisories endpoint (503/slow on 2026-09-04); it runs
+  in CI but is not part of `just check`.
+- The bot's "Version Packages" PR needs its workflow run approved before required
+  checks can pass (`gh api -X POST repos/hironow/earcon/actions/runs/<id>/approve`).
+- Firefox/Safari are supported targets but only Chromium is tested automatically.
 
 ## Context the Next Actor Needs
 
-- The design spec is private (`private/`, gitignored). Decisions and deviations are
-  in `docs/adr/0001-spec-deviations-and-interpretations.md`.
-- `tsconfig.base.json` maps `@earcon/*` to package sources via `paths`; Vite mirrors
-  this with `resolve.alias`. `bun test` follows the tsconfig paths too, so no build is
-  needed before tests.
-- `just semgrep` runs the local `semgrep` binary (not `bunx`); CI installs it with
-  `uv tool install semgrep`.
-- `changeset init` is interactive; the config was written by hand.
-- `bun test` from a package directory needs that package's own `bunfig.toml`
-  (happy-dom preload); root `bunfig.toml` is not inherited.
-- The demo exposes `window.__earcon` (dev only) for Playwright; `ticker()` sounds
-  expose `.clock` for the parkingSensor rate assertion.
-- `tests/e2e/background.e2e.ts` runs only in the `background` Playwright project
-  (`bunx playwright test --project=background`, ~100 s). `just test-e2e` runs both
-  projects.
-- `apps/demo/src/debug.ts` wraps `engine.createContinuous` in dev so e2e can read
-  which buses have a started continuous sound (`window.__earcon.activeContinuous()`).
-- Demo-wide level → sound assignments live in `apps/demo/src/sound-assignments.ts`;
-  the Simulator folds the assigned level ids into its monitor id so `useMonitor`
-  recreates the monitor (it ignores non-id option changes by design).
-- Design tokens for the demo live in `apps/demo/src/styles.css`; the rate LED per
-  row is the one signature element (blinks at the mapped Hz from `presetRate`).
+- The design spec is private (`private/`, gitignored). Decisions and deviations:
+  `docs/adr/0001`–`0011`; test-id mapping: `docs/spec-coverage.md`.
+- The npm CLI never rewrites `workspace:`/`catalog:`; only bun-packed tarballs
+  (`just pack`) may be published. `bun publish` is never used (no OIDC).
+- A developer's `~/.npmrc` may point at a private mirror; the project `bunfig.toml`
+  pins registry.npmjs.org. Pass `--registry https://registry.npmjs.org/` to any manual
+  npm command.
+- React StrictMode runs effects twice; the store's tick loop is started by the
+  provider effect, never at creation.
+- `@earcon/engine-tone`'s main entry must not import `tone` statically; `just build`
+  checks the chunk graph. `fromSpec` lives at the `./from-spec` subpath.
+- Demo: Vite `base` comes from `DEMO_BASE` (`/earcon/` on Pages, `/` locally);
+  `window.__earcon` exists only in dev for Playwright.
 
 ## Relevant Files and Commands
 
-- `justfile` — every task; `just check` is the gate
-- `.semgrep/rules/earcon-core-no-time.yaml` + `packages/core/src/purity.test.ts` — T20
-- `docs/spec-coverage.md` — spec test id → test name
+- `docs/release.md` - the release procedure (bootstrap, CI, rules)
+- `.github/workflows/{ci,release,pages}.yaml` - gates, publish, demo deploy
+- `scripts/pack-check.ts`, `scripts/sync-lock-versions.ts`, `scripts/check-lazy-tone.ts` - release guards
+- `packages/react/src/store.ts` - event → sound wiring (ADR-0003)
+- `just check` - tsc -b + semgrep + bun test + core coverage gate
+- `just test-e2e` - Playwright (Chromium; `bunx playwright install chromium` once)
+- `just build && just pack` - dist + publishable tarballs in `dist-pack/`
+- `just release-version` - changeset version + lockfile sync (CI runs it)
+- `just dev` / `just dev-lan` - demo locally / on the LAN for phones

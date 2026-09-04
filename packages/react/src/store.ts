@@ -42,7 +42,8 @@ export interface MonitorExtras {
 }
 
 export interface NotifierStore {
-  configure(patch: Omit<NotifierConfig, 'engine'>): void
+  /** Runtime-changeable settings. `tickIntervalSec` is fixed at creation (the provider recreates the store). */
+  configure(patch: Omit<NotifierConfig, 'engine' | 'tickIntervalSec'>): void
   addMonitor(opts: MonitorOptions, extras?: MonitorExtras): void
   removeMonitor(id: string): void
   update(id: string, value: number, t: number): void

@@ -80,15 +80,12 @@ Trusted publishing cannot be configured for a package that does not exist yet.
 8. Run the workflow manually with `dry_run: true`, then make the next real release
    from a tag and confirm `dist.attestations` shows a provenance entry.
 
-## Known unknowns (verify on the first tagged release)
+## Verified on 0.0.2 (2026-09-04)
 
-- Whether provenance is attached when publishing a tarball path under OIDC. The npm
-  CLI calls its OIDC path for every spec type and sets `provenance` automatically
-  on GitHub Actions (npm/cli `lib/commands/publish.js`, `lib/utils/oidc.js`,
-  read 2026-09-04); the attestation generation itself was not traced, so confirm
-  `dist.attestations` on the first tagged release.
-- Whether npm's staged publishing (2026-05) requires a human approval step for
-  ordinary publishes of existing packages.
+- Publishing a tarball path under OIDC attaches SLSA v1 provenance attestations
+  (`dist.attestations` on all three packages, visible within a few minutes).
+- Ordinary publishes of existing packages did not require a staged-publishing
+  approval step.
 
 ## Local checks before any release
 

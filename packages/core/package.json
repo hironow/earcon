@@ -1,6 +1,6 @@
 {
   "name": "@earcon/core",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Pure sonification state machine: monitors, hysteresis levels, ETA-based intensity, arbiter. No DOM, no Web Audio.",
   "license": "MIT",
   "type": "module",

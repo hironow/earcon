@@ -24,6 +24,13 @@ A bun workspace publishing three ESM packages (`@earcon/core`, `@earcon/engine-t
 - Unit tests are colocated (`src/*.test.ts`, `bun:test`). Playwright tests live in
   `tests/e2e/`. No mocks in e2e.
 
+## Release
+
+Publishing goes through `.github/workflows/release.yaml` with npm Trusted
+Publishing. The publish step runs `bunx npm publish` — the single sanctioned
+exception to "bun only", because `bun publish` has no OIDC/provenance (ADR-0007).
+Never run `bun publish`; never put an npm token in CI. Procedure: `docs/release.md`.
+
 ## Commands
 
 `just check` is the gate (`tsc -b`, semgrep, `bun test`, core coverage ≥ 90%).

@@ -1,6 +1,6 @@
 # Handover
 
-**Last updated:** 2026-09-04 05:40 (JST)
+**Last updated:** 2026-09-04 10:40 (JST)
 **Updated by:** Claude Code session (earcon M0)
 
 ## Current State
@@ -43,6 +43,10 @@ Nothing in flight. Next milestone is M4.
 4. M6 README Quick start, `docs/api.md`, first changeset (no publish, no deploy)
 
 ## Known Risks / Blockers
+
+- `bun.lock` tarball URLs point at `https://npm.flatt.tech/` (this machine's global
+  registry). CI and other clones will download from that mirror unless the lockfile
+  is re-pointed at registry.npmjs.org. Publishing is unaffected (`publishConfig`).
 
 - `.github/workflows/ci.yaml` has never run (no remote). Verify on first push.
 - `bun publish` needs npm login and the `@earcon` org; deferred until a remote exists.

@@ -1,6 +1,6 @@
 # Handover
 
-**Last updated:** 2026-09-04 10:40 (JST)
+**Last updated:** 2026-09-04 10:50 (JST)
 **Updated by:** Claude Code session (earcon M0)
 
 ## Current State
@@ -44,9 +44,11 @@ Nothing in flight. Next milestone is M4.
 
 ## Known Risks / Blockers
 
-- `bun.lock` tarball URLs point at `https://npm.flatt.tech/` (this machine's global
-  registry). CI and other clones will download from that mirror unless the lockfile
-  is re-pointed at registry.npmjs.org. Publishing is unaffected (`publishConfig`).
+- `bun audit` depends on npm's advisories endpoint, which answered 503 / 27 s on
+  2026-09-04. It runs in CI (`ci.yaml`, `release.yaml`) and via `just audit`, but is
+  deliberately not part of `just check` so the local gate stays deterministic.
+- This machine's global `~/.npmrc` points at the mirror `npm.flatt.tech`; the
+  project `bunfig.toml` overrides it for this repository only.
 
 - `.github/workflows/ci.yaml` has never run (no remote). Verify on first push.
 - `bun publish` needs npm login and the `@earcon` org; deferred until a remote exists.

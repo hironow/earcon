@@ -2,6 +2,10 @@
 preload = ["./test/happydom.ts"]
 
 [install]
+# The repository resolves and installs from the public registry regardless of any
+# mirror configured in a developer's ~/.npmrc, so bun.lock is reproducible for every
+# clone and CI (ADR-0007).
+registry = "https://registry.npmjs.org/"
 # Supply-chain hygiene (ADR-0007): never resolve a version published less than 7 days ago,
 # except our own packages. Applies to new resolutions only; bun.lock stays as is.
 minimumReleaseAge = 604800

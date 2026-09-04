@@ -8,6 +8,8 @@ import type { SoundSpec } from '@earcon/core'
 export type Assignments = Record<string, SoundSpec>
 
 let assignments: Assignments = {}
+/** Bumps on every change, so a monitor id that embeds it is rebuilt even when the same level gets a new spec. */
+let revision = 0
 const listeners = new Set<() => void>()
 
 export function assignSound(level: string, spec: SoundSpec | null) {
@@ -15,7 +17,19 @@ export function assignSound(level: string, spec: SoundSpec | null) {
   if (spec) next[level] = spec
   else delete next[level]
   assignments = next
+  revision++
   for (const cb of listeners) cb()
+}
+
+export function useAssignmentRevision(): number {
+  return useSyncExternalStore(
+    (cb) => {
+      listeners.add(cb)
+      return () => listeners.delete(cb)
+    },
+    () => revision,
+    () => revision,
+  )
 }
 
 export function useAssignments(): Assignments {

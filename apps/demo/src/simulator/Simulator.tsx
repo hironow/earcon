@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { Direction, Level, MonitorEvent, MonitorState, Urgency } from '@earcon/core'
 import { useMonitor } from '@earcon/react'
-import { useAssignments } from '../sound-assignments'
+import { useAssignmentRevision, useAssignments } from '../sound-assignments'
 import { SCENARIOS, type ScenarioId } from './scenarios'
 
 interface SimConfig {
@@ -59,9 +59,10 @@ export function Simulator() {
   }, [])
 
   const assignments = useAssignments()
+  const assignRev = useAssignmentRevision()
   const assignKey = Object.keys(assignments).sort().join(',')
   const { state, update, acknowledge } = useMonitor({
-    id: `sim-${applied.rev}${assignKey ? `-${assignKey}` : ''}`,
+    id: `sim-${applied.rev}${assignKey ? `-a${assignRev}-${assignKey}` : ''}`,
     sounds: assignments,
     direction: applied.config.direction,
     levels: applied.config.levels,

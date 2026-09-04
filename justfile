@@ -60,9 +60,23 @@ publish-dry:
 pack:
     bun run scripts/pack-check.ts
 
-# Dependency vulnerability audit (CI gate; locally needs registry.npmjs.org reachable)
+# Dependency vulnerability audit (CI gate; needs registry.npmjs.org reachable).
+# npm's advisories endpoint returns transient 503s; a registry or transport error
+# is retried (delays from AUDIT_RETRY_DELAYS, seconds), then the audit fails. A
+# real finding fails at once, and the gate is never skipped or downgraded.
 audit:
-    bun audit --audit-level=high
+    #!/usr/bin/env bash
+    set -euo pipefail
+    log="$(mktemp)"
+    trap 'rm -f "$log"' EXIT
+    for delay in ${AUDIT_RETRY_DELAYS:-20 60} 0; do
+        if bun audit --audit-level=high 2>&1 | tee "$log"; then exit 0; fi
+        if [ "$delay" = 0 ] || ! grep -qE 'registry\.npmjs\.org.* - 5[0-9]{2}|ECONNRESET|ETIMEDOUT|ENOTFOUND|EAI_AGAIN' "$log"; then
+            exit 1
+        fi
+        echo "bun audit: registry error, retrying in ${delay}s" >&2
+        sleep "$delay"
+    done
 
 # Releases are published by .github/workflows/release.yaml over npm Trusted
 # Publishing (ADR-0007). Locally this only bumps versions from pending changesets.

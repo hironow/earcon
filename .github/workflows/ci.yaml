@@ -22,7 +22,7 @@ jobs:
       - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
       - run: uv tool install semgrep==1.176.0
       - run: bun install --frozen-lockfile
-      - run: bun audit --audit-level=high
+      - run: just audit # bun audit with a retry on registry errors
       - run: just lint
       - run: just test
       - run: just test-core

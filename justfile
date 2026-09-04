@@ -68,4 +68,9 @@ audit:
 # Publishing (ADR-0007). Locally this only bumps versions from pending changesets.
 release-version:
     bunx changeset version
-    bun install --lockfile-only
+    bun run scripts/sync-lock-versions.ts
+    bun install --frozen-lockfile --dry-run
+
+# Sync workspace versions from package.json into bun.lock (bun does not do this itself)
+sync-lock:
+    bun run scripts/sync-lock-versions.ts

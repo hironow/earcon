@@ -1,6 +1,6 @@
 # Handover
 
-**Last updated:** 2026-09-04 11:40 (JST)
+**Last updated:** 2026-09-04 12:00 (JST)
 **Updated by:** Claude Code session (earcon M0)
 
 ## Current State
@@ -49,6 +49,13 @@ Nothing in flight. Next milestone is M4.
 4. M6 README Quick start, `docs/api.md`, first changeset (no publish, no deploy)
 
 ## Known Risks / Blockers
+
+- bun keeps workspace versions in `bun.lock` and `bun pm pack` resolves
+  `workspace:*` from there, but no bun command refreshes them after a version bump
+  (verified 2026-09-04 with `bun install --lockfile-only`, `--force`,
+  `bun pm version`; only a full lockfile regeneration does, and that re-resolves
+  every dependency). `just release-version` runs `scripts/sync-lock-versions.ts`
+  and `just pack` rejects mismatches. Re-check when bun changes this.
 
 - `bun audit` depends on npm's advisories endpoint, which answered 503 / 27 s on
   2026-09-04. It runs in CI (`ci.yaml`, `release.yaml`) and via `just audit`, but is

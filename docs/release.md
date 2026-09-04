@@ -18,7 +18,12 @@ ADR-0007); background: `docs/research/2026-09-04-bun-publish-secure-release.md`.
 - Changesets, `fixed` group: the three packages always share one version.
 - `bunx changeset` records each behavioural change. On every push to `main` the
   release workflow's `version` job opens or updates the "Version Packages" pull
-  request by running `just release-version` (bump + `bun install --lockfile-only`).
+  request by running `just release-version`: `changeset version`, then
+  `scripts/sync-lock-versions.ts` (bun does not copy workspace versions into
+  `bun.lock` by itself, and `bun pm pack` resolves `workspace:*` from the lockfile —
+  without the sync a package would depend on a version that was never published),
+  then a frozen dry-run install as a consistency check. `just pack` fails if any
+  internal dependency does not match the workspace version.
 - Merge that PR, then tag the merge commit `vX.Y.Z` and push the tag.
 
 ## Every release (CI, no secrets)

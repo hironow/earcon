@@ -37,8 +37,9 @@ dry-run by default):
    `just build`, `just pack` (fails if any packed manifest still has `workspace:` /
    `catalog:` or an unexpected file).
 3. The tag must equal every package version.
-4. `npm publish dist-pack/<pkg>.tgz --access public --registry https://registry.npmjs.org`
-   for each tarball whose version is not on the registry yet (already-published
+4. `npm publish ./dist-pack/<pkg>.tgz --access public --registry https://registry.npmjs.org`
+   (the `./` prefix matters: without it npm reads the path as a GitHub `owner/repo`
+   shortcut) for each tarball whose version is not on the registry yet (already-published
    versions are skipped, so re-runs and the manual bootstrap release are safe).
    Authentication is OIDC; npm adds provenance itself (no `--provenance` flag;
    publishing a tarball path with provenance is not documented, so the next step
@@ -62,8 +63,8 @@ Trusted publishing cannot be configured for a package that does not exist yet.
 4. `npm login` (a two-hour session; with account 2FA on, no access token is needed
    at all — the publish prompts for 2FA interactively).
 5. For each tarball, in dependency order (core, engine-tone, react):
-   `npm publish dist-pack/<pkg>.tgz --access public --registry https://registry.npmjs.org`
-   and answer the 2FA prompt (`publishConfig` in each package.json also pins
+   `npm publish ./dist-pack/<pkg>.tgz --access public --registry https://registry.npmjs.org`
+   (keep the `./` prefix) and answer the 2FA prompt (`publishConfig` in each package.json also pins
    registry and access). Staged publishing cannot be used here: npm only stages
    packages that already exist.
 6. For each package (account 2FA must be on; the package must already exist):

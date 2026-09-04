@@ -90,7 +90,8 @@ jobs:
               echo "@earcon/$pkg@$ver is already published, skipping"
               continue
             fi
-            npm publish "dist-pack/earcon-$pkg-$ver.tgz" --access public --registry https://registry.npmjs.org
+            # "./" is required: npm treats "dist-pack/x.tgz" as a GitHub owner/repo shortcut.
+            npm publish "./dist-pack/earcon-$pkg-$ver.tgz" --access public --registry https://registry.npmjs.org
           done
       - name: Verify provenance attestations (npm's publish-time scan may delay visibility)
         if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.dry_run) }}

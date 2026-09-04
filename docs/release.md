@@ -17,6 +17,10 @@ ADR-0007); background: `docs/research/2026-09-04-bun-publish-secure-release.md`.
 
 - `main` accepts pull requests only (ruleset `protect`: PR required, squash merge,
   linear history, required checks `check` and `e2e`, no bypass — not even admins).
+- Required checks are matched by job name, so a job renamed in `ci.yaml` must be
+  mirrored in the ruleset: a required check that never reports blocks every
+  merge. Same convention as firepact and tablecodec, where every `ci.yaml` PR
+  job (matrix legs included) is required.
 - `v*` tags cannot be created, moved or deleted except by admins (ruleset
   "Protect release tags (v*)", same as firepact and tablecodec).
 - "Allow GitHub Actions to create and approve pull requests" stays enabled: the

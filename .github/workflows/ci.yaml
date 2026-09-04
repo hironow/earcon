@@ -16,14 +16,14 @@ jobs:
           bun-version: "1.4.0"
       - uses: extractions/setup-just@dd310ad5a97d8e7b41793f8ef055398d51ad4de6 # v2
       - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
-      - run: uv tool install semgrep
+      - run: uv tool install semgrep==1.176.0
       - run: bun install --frozen-lockfile
       - run: bun audit --audit-level=high
       - run: just lint
       - run: just test
       - run: just test-core
       - run: just build
-      - run: just publish-dry
+      - run: just pack
 
   e2e:
     runs-on: ubuntu-latest

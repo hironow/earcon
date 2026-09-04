@@ -17,7 +17,13 @@ interface NormalizedLevel {
 function normalizeLevels(opts: MonitorOptions): NormalizedLevel[] {
   if (opts.levels.length === 0) throw new Error(`createMonitor(${opts.id}): levels must not be empty`)
   const sign = opts.direction === 'decreasing' ? -1 : 1
-  return opts.levels.map((level: Level) => {
+  const ids = new Set<string>()
+  const levels = opts.levels.map((level: Level) => {
+    if (!Number.isFinite(level.enter) || !Number.isFinite(level.exit)) {
+      throw new Error(`createMonitor(${opts.id}): level "${level.id}" enter/exit must be finite numbers`)
+    }
+    if (ids.has(level.id)) throw new Error(`createMonitor(${opts.id}): duplicate level id "${level.id}"`)
+    ids.add(level.id)
     const enter = sign * level.enter
     const exit = sign * level.exit
     if (!(exit < enter)) {
@@ -27,6 +33,14 @@ function normalizeLevels(opts: MonitorOptions): NormalizedLevel[] {
     }
     return { id: level.id, enter, exit }
   })
+  for (let i = 1; i < levels.length; i++) {
+    if (!(levels[i]!.enter > levels[i - 1]!.enter)) {
+      throw new Error(
+        `createMonitor(${opts.id}): levels must be in safe → dangerous order; "${levels[i]!.id}" is not more dangerous than "${levels[i - 1]!.id}"`,
+      )
+    }
+  }
+  return levels
 }
 
 function bandWidth(levels: NormalizedLevel[], k: number): number {
@@ -39,6 +53,9 @@ function bandWidth(levels: NormalizedLevel[], k: number): number {
 }
 
 function validateOptions(opts: MonitorOptions): void {
+  if (opts.urgency?.mode === 'eta' && !Number.isFinite(opts.urgency.eventAt)) {
+    throw new Error(`createMonitor(${opts.id}): urgency.eventAt must be a finite number`)
+  }
   const horizon = opts.urgency?.mode === 'eta' ? (opts.urgency.horizonSec ?? DEFAULT_HORIZON_SEC) : DEFAULT_HORIZON_SEC
   if (!(horizon > 1)) throw new Error(`createMonitor(${opts.id}): urgency.horizonSec must be > 1 (log10 scale), got ${horizon}`)
   if (opts.staleAfterMs !== undefined && !(opts.staleAfterMs >= 0)) {
@@ -102,6 +119,8 @@ export function createMonitor(opts: MonitorOptions): Monitor {
   }
 
   function update(sample: Sample): MonitorEvent[] {
+    // Non-finite input cannot be mapped; it is dropped like a stale timestamp.
+    if (!Number.isFinite(sample.value) || !Number.isFinite(sample.t)) return []
     if (prev && sample.t <= prev.t) return []
     const events: MonitorEvent[] = []
     const d = sign * sample.value

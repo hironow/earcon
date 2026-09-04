@@ -41,6 +41,14 @@ describe('validateSynthSpec', () => {
     [{ ...good, mode: 'oneShot', notes: 'C5' }, /notes/],
     [{ ...good, fx: { delay: { time: 0.3, feedback: 1.5, wet: 0.3 } } }, /fx\.delay\.feedback/],
     [{ ...good, fx: { filter: { type: 'bandpass', freq: 100 } } }, /fx\.filter\.type/],
+    [{ ...good, rate: { minHz: 8, maxHz: 1 } }, /rate\.maxHz/],
+    [{ ...good, rate: { minHz: 0.01, maxHz: 1 } }, /rate\.minHz/],
+    [{ ...good, rate: { minHz: 1, maxHz: 500 } }, /rate\.maxHz/],
+    [{ ...good, volume: 40 }, /volume/],
+    [{ ...good, pattern: [{ offset: 0.2, dur: 0.1 }, { offset: 0.1, dur: 0.1 }] }, /pattern\[1\]\.offset/],
+    [{ ...good, pattern: [{ offset: 0.1, dur: 0.1 }, { offset: 0.1, dur: 0.1 }] }, /pattern\[1\]\.offset/],
+    [{ ...good, mode: 'oneShot', notes: [{ note: 'C5', at: 0.5, dur: 0.1 }, { note: 'E5', at: 0.5, dur: 0.1 }] }, /notes\[1\]\.at/],
+    [{ ...good, mode: 'oneShot', notes: Array.from({ length: 65 }, (_, i) => ({ note: 'C5', at: i, dur: 0.1 })) }, /notes/],
   ] as const)('%j → error matching %s', (spec, re) => {
     const errors = validateSynthSpec(spec)
     expect(errors.length).toBeGreaterThan(0)

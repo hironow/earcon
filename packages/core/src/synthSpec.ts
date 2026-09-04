@@ -5,6 +5,8 @@ const OSCILLATORS = ['sine', 'square', 'triangle', 'sawtooth']
 const MODES = ['continuous', 'oneShot']
 const CURVES = ['linear', 'exp']
 const FILTERS = ['lowpass', 'highpass']
+/** Practical bounds: rates a clock can drive, volumes that cannot clip the master. */
+export const SYNTH_SPEC_LIMITS = { minRateHz: 0.05, maxRateHz: 60, minVolumeDb: -60, maxVolumeDb: 6, maxHits: 64 } as const
 /** Scientific pitch notation: C4, F#3, Bb-1, A#10 */
 export const NOTE_NAME = /^[A-Ga-g][#b]?-?\d{1,2}$/
 
@@ -35,7 +37,9 @@ export function validateSynthSpec(input: unknown): string[] {
     const sus = s.envelope.sustain
     if (!isNum(sus) || sus < 0 || sus > 1) errors.push('envelope.sustain must be a number in [0, 1]')
   }
-  if (!isNum(s.volume)) errors.push('volume must be a number (dB)')
+  if (!isNum(s.volume) || s.volume < SYNTH_SPEC_LIMITS.minVolumeDb || s.volume > SYNTH_SPEC_LIMITS.maxVolumeDb) {
+    errors.push(`volume must be a number in [${SYNTH_SPEC_LIMITS.minVolumeDb}, ${SYNTH_SPEC_LIMITS.maxVolumeDb}] dB`)
+  }
 
   if (s.fx !== undefined) {
     if (!isRec(s.fx)) errors.push('fx must be an object')
@@ -64,8 +68,10 @@ export function validateSynthSpec(input: unknown): string[] {
     const r = s.rate
     if (!isRec(r)) errors.push('rate must be an object')
     else {
-      if (!isNum(r.minHz) || r.minHz <= 0) errors.push('rate.minHz must be a number > 0')
-      if (!isNum(r.maxHz) || r.maxHz <= 0) errors.push('rate.maxHz must be a number > 0')
+      const { minRateHz, maxRateHz } = SYNTH_SPEC_LIMITS
+      if (!isNum(r.minHz) || r.minHz < minRateHz || r.minHz > maxRateHz) errors.push(`rate.minHz must be in [${minRateHz}, ${maxRateHz}] Hz`)
+      if (!isNum(r.maxHz) || r.maxHz < minRateHz || r.maxHz > maxRateHz) errors.push(`rate.maxHz must be in [${minRateHz}, ${maxRateHz}] Hz`)
+      else if (isNum(r.minHz) && r.maxHz < r.minHz) errors.push('rate.maxHz must be >= rate.minHz')
       if (r.curve !== undefined && !CURVES.includes(r.curve as string)) errors.push(`rate.curve must be one of ${CURVES.join(' | ')}`)
     }
   }
@@ -79,10 +85,14 @@ export function validateSynthSpec(input: unknown): string[] {
   }
   if (s.pattern !== undefined) {
     if (!Array.isArray(s.pattern)) errors.push('pattern must be an array')
+    else if (s.pattern.length > SYNTH_SPEC_LIMITS.maxHits) errors.push(`pattern must have at most ${SYNTH_SPEC_LIMITS.maxHits} hits`)
     else {
+      let last = -Infinity
       s.pattern.forEach((h, i) => {
         if (!isRec(h)) return errors.push(`pattern[${i}] must be an object`)
         if (!isNum(h.offset) || h.offset < 0) errors.push(`pattern[${i}].offset must be a number >= 0 (seconds)`)
+        else if (h.offset <= last) errors.push(`pattern[${i}].offset must be later than the previous hit (one voice cannot re-attack at the same time)`)
+        else last = h.offset
         if (h.note !== undefined && (typeof h.note !== 'string' || !NOTE_NAME.test(h.note))) errors.push(`pattern[${i}].note must be a note name`)
         if (!isNum(h.dur) || h.dur <= 0) errors.push(`pattern[${i}].dur must be a number > 0 (seconds)`)
       })
@@ -90,11 +100,15 @@ export function validateSynthSpec(input: unknown): string[] {
   }
   if (s.notes !== undefined) {
     if (!Array.isArray(s.notes)) errors.push('notes must be an array')
+    else if (s.notes.length > SYNTH_SPEC_LIMITS.maxHits) errors.push(`notes must have at most ${SYNTH_SPEC_LIMITS.maxHits} entries`)
     else {
+      let last = -Infinity
       s.notes.forEach((n, i) => {
         if (!isRec(n)) return errors.push(`notes[${i}] must be an object`)
         if (typeof n.note !== 'string' || !NOTE_NAME.test(n.note)) errors.push(`notes[${i}].note must be a note name`)
         if (!isNum(n.at) || n.at < 0) errors.push(`notes[${i}].at must be a number >= 0 (seconds)`)
+        else if (n.at <= last) errors.push(`notes[${i}].at must be later than the previous note (one voice cannot re-attack at the same time)`)
+        else last = n.at
         if (!isNum(n.dur) || n.dur <= 0) errors.push(`notes[${i}].dur must be a number > 0 (seconds)`)
       })
     }

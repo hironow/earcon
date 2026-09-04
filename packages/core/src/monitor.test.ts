@@ -53,6 +53,20 @@ describe('createMonitor: level transitions', () => {
     expect(m.state.level).toBe('warn')
   })
 
+  test('spec §3.3 rule 4: the demotion target is chosen by its enter, hysteresis only applies to the current level', () => {
+    // critical(.01) → .055: critical exits (.055 >= .03); warn.enter .05 is not met (.055 > .05) → watch
+    const m = createMonitor(base)
+    const [, , events] = feed(m, [0.15, 0.01, 0.055])
+    expect(transitions(events!)).toEqual([
+      { type: 'exit', level: 'critical', to: 'watch' },
+      { type: 'enter', level: 'watch', from: 'critical' },
+    ])
+    // warn(.035) → .11: warn exits (.11 >= .06); watch.enter .10 not met → safe
+    const m2 = createMonitor(base)
+    const [, , e2] = feed(m2, [0.15, 0.035, 0.11])
+    expect(transitions(e2!)).toEqual([{ type: 'exit', level: 'warn', to: null }])
+  })
+
   test('demotion straight to safe when no lower level matches', () => {
     const m = createMonitor(base)
     const [, , events] = feed(m, [0.15, 0.01, 0.2])
@@ -281,6 +295,23 @@ describe('createMonitor: options validation and reset', () => {
     expect(() => createMonitor({ ...base, staleAfterMs: -1 })).toThrow(/staleAfterMs/)
     expect(() => createMonitor({ ...base, velocityWindowMs: 0 })).toThrow(/velocityWindowMs/)
     expect(() => createMonitor({ ...base, urgency: { mode: 'eta', eventAt: 0, horizonSec: 1.5 } })).not.toThrow()
+  })
+
+  test('levels must be ordered safe → dangerous with unique ids and finite thresholds', () => {
+    expect(() => createMonitor({ ...base, levels: [warn, watch] })).toThrow(/order/)
+    expect(() => createMonitor({ ...base, levels: [watch, { ...warn, id: 'watch' }] })).toThrow(/duplicate/)
+    expect(() => createMonitor({ ...base, levels: [{ id: 'x', enter: Number.NaN, exit: 0.1 }] })).toThrow(/finite/)
+    expect(() => createMonitor({ ...base, urgency: { mode: 'eta', eventAt: Number.POSITIVE_INFINITY } })).toThrow(/eventAt/)
+  })
+
+  test('non-finite samples are ignored like stale timestamps', () => {
+    const m = createMonitor(base)
+    m.update({ value: 0.035, t: 0 })
+    const before = m.state
+    expect(m.update({ value: Number.NaN, t: 1000 })).toEqual([])
+    expect(m.update({ value: 0.03, t: Number.NaN })).toEqual([])
+    expect(m.update({ value: Number.POSITIVE_INFINITY, t: 2000 })).toEqual([])
+    expect(m.state).toBe(before)
   })
 
   test('empty levels throws', () => {

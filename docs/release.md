@@ -19,6 +19,10 @@ ADR-0007); background: `docs/research/2026-09-04-bun-publish-secure-release.md`.
   linear history, required checks `check` and `e2e`, no bypass — not even admins).
 - `v*` tags cannot be created, moved or deleted except by admins (ruleset
   "Protect release tags (v*)", same as firepact and tablecodec).
+- "Allow GitHub Actions to create and approve pull requests" stays enabled: the
+  changesets bot needs it to open the "Version Packages" PR. With
+  `required_approving_review_count: 0` this grants nothing extra; if approvals are
+  ever required, switch the changesets step to a GitHub App token first.
 - The "Version Packages" PR is opened by the GitHub Actions bot; its workflow run
   needs a one-click approval (Actions → the run → "Approve and run", or
   `gh api -X POST repos/hironow/earcon/actions/runs/<id>/approve`) before the
@@ -100,6 +104,18 @@ Trusted publishing cannot be configured for a package that does not exist yet.
   (`dist.attestations` on all three packages, visible within a few minutes).
 - Ordinary publishes of existing packages did not require a staged-publishing
   approval step.
+
+## Dependency vulnerability gate
+
+- Dependabot cannot read `bun.lock` (`lockfileVersion` 2, written by bun 1.4 for
+  catalogs; Dependabot's bun supports version 1 as of 2026-09-04), so Dependabot
+  version updates for bun fail and **an empty Dependabot alert list proves
+  nothing**. The only working dependency-vulnerability gate is
+  `bun audit --audit-level=high` in `ci.yaml` (part of the required `check`) and
+  in `release.yaml`. Do not remove it. Re-check Dependabot's bun support
+  periodically; alerts may appear all at once when it lands.
+- GitHub Actions bumps still work (`.github/dependabot.yaml`, github-actions
+  ecosystem).
 
 ## Local checks before any release
 

@@ -80,10 +80,12 @@ jobs:
             if [ "$v" != "$tag" ]; then echo "packages/$pkg is $v, tag is $tag"; exit 1; fi
           done
       - name: Publish tarballs (npm Trusted Publishing; provenance is added by npm)
+        id: publish
         if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.dry_run) }}
         run: |
           # Idempotent: a version that is already on the registry (e.g. the manual
           # bootstrap release, or a re-run) is skipped instead of failing.
+          published=0
           for pkg in core engine-tone react; do
             ver=$(node -p "require('./packages/$pkg/package.json').version")
             if npm view "@earcon/$pkg@$ver" version --registry https://registry.npmjs.org >/dev/null 2>&1; then
@@ -92,9 +94,11 @@ jobs:
             fi
             # "./" is required: npm treats "dist-pack/x.tgz" as a GitHub owner/repo shortcut.
             npm publish "./dist-pack/earcon-$pkg-$ver.tgz" --access public --registry https://registry.npmjs.org
+            published=1
           done
+          echo "published=$published" >> "$GITHUB_OUTPUT"
       - name: Verify provenance attestations (npm's publish-time scan may delay visibility)
-        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.dry_run) }}
+        if: ${{ steps.publish.outputs.published == '1' }}
         continue-on-error: true
         run: |
           ver=$(node -p "require('./packages/core/package.json').version")

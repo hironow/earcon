@@ -1,5 +1,13 @@
 # @earcon/core
 
+## 0.0.2
+
+### Patch Changes
+
+- 55978c4: Documentation refresh after the first release (README, intent, release procedure).
+  No library code changes. First version published through the CI trusted-publishing
+  pipeline.
+
 ## 0.0.1
 
 ### Patch Changes

@@ -21,6 +21,7 @@ function makePresets() {
   const presets = {
     continuous: { sonar: cont('sonar'), parkingSensor: cont('parkingSensor') },
     oneShot: { knock: shot('knock'), allClear: shot('allClear') },
+    fromSpec: (spec: { mode: string }) => (spec.mode === 'continuous' ? cont('synth')() : shot('synth')()),
   } as unknown as Presets
   return { presets, log }
 }
@@ -258,7 +259,7 @@ describe('createToneEngine', () => {
     expect(FakeNode.live.size).toBe(0)
   })
 
-  test('dispose() during unlock() builds nothing and leaves the engine locked', async () => {
+  test('dispose() during unlock() builds nothing and leaves the engine unavailable', async () => {
     let release!: () => void
     const gate = new Promise<void>((r) => (release = r))
     const { engine } = engineWith({
@@ -273,10 +274,66 @@ describe('createToneEngine', () => {
     engine.dispose()
     release()
     await pending
-    expect(engine.status).toBe('locked')
+    expect(engine.status).toBe('unavailable')
     expect(FakeNode.live.size).toBe(0)
     await engine.unlock() // no-op after dispose
     expect(FakeNode.live.size).toBe(0)
+  })
+
+  test('after dispose the engine is unavailable and every factory is inert', async () => {
+    const { engine, log } = engineWith()
+    const seen: string[] = []
+    engine.onStatusChange((s) => seen.push(s))
+    await engine.unlock()
+    engine.dispose()
+    expect(engine.status).toBe('unavailable')
+    expect(seen).toEqual(['ready', 'unavailable'])
+    const bus = engine.createBus('late')
+    const sound = engine.createContinuous({ kind: 'preset', id: 'sonar' }, bus)
+    sound.start(1)
+    engine.createOneShot({ kind: 'preset', id: 'knock' }, bus).play()
+    const cancel = engine.scheduleRepeat(() => {}, 1)
+    cancel()
+    await engine.resume()
+    expect(log.filter((l) => l.includes('synth') || l.startsWith('sonar.start') || l.startsWith('knock.play'))).toEqual([])
+    expect(FakeNode.live.size).toBe(0)
+    expect(engine.status).toBe('unavailable')
+  })
+
+  test('dispose() while Tone.start() is pending builds nothing', async () => {
+    let release!: () => void
+    const gate = new Promise<void>((r) => (release = r))
+    const original = fakeTone.start
+    ;(fakeTone as { start: () => Promise<void> }).start = async () => {
+      await gate
+      fakeToneCalls.start++
+    }
+    try {
+      const { engine } = engineWith()
+      const pending = engine.unlock()
+      await Promise.resolve()
+      engine.dispose()
+      release()
+      await pending
+      expect(FakeNode.live.size).toBe(0)
+      expect(engine.status).toBe('unavailable')
+    } finally {
+      ;(fakeTone as { start: () => Promise<void> }).start = original
+    }
+  })
+
+  test('{ kind: "synth" } specs are routed to fromSpec for both modes', async () => {
+    const { engine, log } = engineWith()
+    const bus = engine.createBus('w1')
+    const env = { attack: 0.01, decay: 0.1, sustain: 0.5, release: 0.1 }
+    const c = engine.createContinuous({ kind: 'synth', mode: 'continuous', voice: 'synth', envelope: env, volume: -6 }, bus)
+    const o = engine.createOneShot({ kind: 'synth', mode: 'oneShot', voice: 'synth', envelope: env, volume: -6, notes: [{ note: 'C5', at: 0, dur: 0.1 }] }, bus)
+    await engine.unlock()
+    c.start(0.5)
+    o.play()
+    expect(log).toContain('synth.start(0.5)')
+    expect(log.some((l) => l.startsWith('synth.play('))).toBe(true)
+    expect(() => engine.createContinuous({ kind: 'synth', mode: 'oneShot', voice: 'synth', envelope: env, volume: -6 }, bus)).toThrow(/mode/)
   })
 
   test('custom factory specs are called with the bus output', async () => {

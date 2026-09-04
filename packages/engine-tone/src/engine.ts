@@ -77,7 +77,7 @@ export function createToneEngine(opts: ToneEngineOptions = {}): Engine {
   let masterDb = opts.masterVolumeDb ?? DEFAULT_MASTER_DB
   let muted = false
   let unlocking: Promise<void> | null = null
-  let disposed = false
+  let engineDisposed = false
   const listeners = new Set<(s: EngineStatus) => void>()
   const lazies = new Set<Lazy>()
   const busOutputs = new WeakMap<Bus, () => SoundContext>()
@@ -94,7 +94,12 @@ export function createToneEngine(opts: ToneEngineOptions = {}): Engine {
 
   // ---------------------------------------------------------------- buses
 
+  const inertBus = (id: string): Bus => ({ id, setPan() {}, setVolume() {}, dispose() {} })
+  const inertContinuous: ContinuousSound = { start() {}, set() {}, stop() {}, dispose() {} }
+  const inertOneShot: OneShotSound = { play() {}, dispose() {} }
+
   function createBus(id: string, busOpts: { pan?: number; volume?: number } = {}): Bus {
+    if (engineDisposed) return inertBus(id)
     let pan = busOpts.pan ?? 0
     let volume = busOpts.volume ?? 0
     let gain: InstanceType<ToneModule['Gain']> | null = null
@@ -145,6 +150,7 @@ export function createToneEngine(opts: ToneEngineOptions = {}): Engine {
 
   function createContinuous(spec: SoundSpec, bus: Bus): ContinuousSound {
     validateSpec(spec, 'continuous')
+    if (engineDisposed) return inertContinuous
     let real: ContinuousSound | null = null
     let started = false
     let intensity = 0
@@ -184,6 +190,7 @@ export function createToneEngine(opts: ToneEngineOptions = {}): Engine {
 
   function createOneShot(spec: SoundSpec, bus: Bus): OneShotSound {
     validateSpec(spec, 'oneShot')
+    if (engineDisposed) return inertOneShot
     let real: OneShotSound | null = null
     let disposed = false
     const lazy: Lazy = {
@@ -218,6 +225,7 @@ export function createToneEngine(opts: ToneEngineOptions = {}): Engine {
   // ---------------------------------------------------------------- clock
 
   function scheduleRepeat(cb: (nowMs: number) => void, intervalSec: number): () => void {
+    if (engineDisposed) return () => {}
     let clock: InstanceType<ToneModule['Clock']> | null = null
     const lazy: Lazy = {
       materialize() {
@@ -241,13 +249,13 @@ export function createToneEngine(opts: ToneEngineOptions = {}): Engine {
   // ---------------------------------------------------------------- lifecycle
 
   async function unlock(): Promise<void> {
-    if (status === 'unavailable' || Tone || disposed) return
+    if (status === 'unavailable' || Tone || engineDisposed) return
     if (unlocking) return unlocking
     unlocking = (async () => {
       const [tone, loadedPresets] = await Promise.all([loadTone(), loadPresets()])
-      if (disposed) return
+      if (engineDisposed) return
       await tone.start()
-      if (disposed) return // dispose() raced the user gesture: build nothing
+      if (engineDisposed) return // dispose() raced the user gesture: build nothing
       const context = tone.getContext()
       context.lookAhead = lookAhead
       master = new tone.Gain(masterDb, 'decibels').connect(tone.getDestination())
@@ -273,6 +281,7 @@ export function createToneEngine(opts: ToneEngineOptions = {}): Engine {
   }
 
   async function resume(): Promise<void> {
+    if (engineDisposed) return
     if (!Tone) return unlock()
     const context = Tone.getContext()
     try {
@@ -289,14 +298,19 @@ export function createToneEngine(opts: ToneEngineOptions = {}): Engine {
   }
   if (typeof document !== 'undefined') document.addEventListener('visibilitychange', onVisibilityChange)
 
+  /** After dispose the engine is permanently `unavailable`; every factory returns an inert object. */
   function dispose() {
-    disposed = true
+    if (engineDisposed) return
+    engineDisposed = true
     if (typeof document !== 'undefined') document.removeEventListener('visibilitychange', onVisibilityChange)
     for (const lazy of [...lazies]) lazy.dispose()
     mute?.dispose()
     master?.dispose()
     mute = null
     master = null
+    Tone = null
+    presets = null
+    setStatus('unavailable')
     listeners.clear()
   }
 

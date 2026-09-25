@@ -35,7 +35,7 @@ jobs:
           bun-version: "1.4.0"
       - uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4.0.0
       - run: bun install --frozen-lockfile
-      - uses: changesets/action@8488615a623b1b9c987934bb89eae8af6a946ac1 # v2.1.1 (v2 input names)
+      - uses: changesets/action@ae32849d5ba541f9ae29e40e22a623bc13562f51 # v2.1.1 (v2 input names)
         with:
           version-script: just release-version # changeset version + bun install --lockfile-only
           commit-message: "chore(release): version packages"
@@ -60,7 +60,7 @@ jobs:
         with:
           bun-version: "1.4.0"
       - uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4.0.0
-      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+      - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
       # 1.175.0 is shared with firepact and tablecodec, whose screened index only
       # carries releases older than their seven-day window; bump all three together.
       - run: uv tool install semgrep==1.175.0

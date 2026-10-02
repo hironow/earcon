@@ -30,6 +30,12 @@ A bun workspace publishing three ESM packages (`@earcon/core`, `@earcon/engine-t
   AudioContext seconds.
 - Unit tests are colocated (`src/*.test.ts`, `bun:test`). Playwright tests live in
   `tests/e2e/`. No mocks in e2e.
+- `mock.module` rewrites a module's exports for the whole test process and
+  `mock.restore()` does not undo it (bun 1.4.x), so a mock left installed past the
+  test that needed it makes the suite pass or fail by file order. Apply it inside
+  that one test and restore the real exports (captured as function values, before
+  the mock) in a `finally`. `test/suite-isolation.test.tsx` guards the ssr/hooks
+  pair.
 
 ## Git
 

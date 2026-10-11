@@ -22,6 +22,7 @@ test('designer: twins preview, JSON round-trip, save, assign to warn, simulator 
 
   // JSON panel round-trip: edit volume in the text and load it back
   await page.getByTestId('twin-parkingSensor').click()
+  await expect(page.getByTestId('dz-json')).toHaveValue(/"volume": -10/)
   const json = await page.getByTestId('dz-json').inputValue()
   const edited = json.replace('"volume": -10', '"volume": -12')
   await page.getByTestId('dz-json').fill(edited)

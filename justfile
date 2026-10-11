@@ -9,6 +9,10 @@ default:
 install:
     bun install
 
+# Refresh only the named direct or transitive dependencies
+update-deps +packages:
+    bun update {{packages}}
+
 # Build the three publishable packages (ESM + d.ts via tsdown), then prove the
 # engine-tone main entry does not import tone statically (spec §4.1)
 build:
@@ -24,8 +28,8 @@ test-core:
     cd packages/core && bun test --coverage
 
 # Playwright real-browser tests against apps/demo
-test-e2e:
-    bunx playwright test
+test-e2e *args:
+    bunx playwright test {{args}}
 
 # Run the demo app with Vite (localhost only)
 dev:

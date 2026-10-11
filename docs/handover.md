@@ -1,7 +1,7 @@
 # Handover
 
-**Last updated:** 2026-09-04 18:20 (JST)
-**Updated by:** Claude Code session 01LXPmm8VuMHBjo4Q6k7tRtq
+**Last updated:** 2026-10-11 (JST)
+**Updated by:** Codex
 
 ## Current State
 
@@ -17,18 +17,27 @@ CodeQL are on, aligned with `hironow/firepact` and `hironow/tablecodec`.
 
 ## In Progress
 
-- Nothing in flight.
+- [PR #15](https://github.com/hironow/earcon/pull/15): dependency refresh plus
+  shell-quote 1.12.0 and source-map-js 1.2.2 security fixes. Local audit,
+  `just check`, build, pack and all 25 E2E tests pass. Designer E2E also passed
+  five repeats after waiting for the selected preset JSON. Check the PR for
+  the current CI and merge status.
+- `just update-deps <packages...>` refreshes only named dependencies.
+- Local build validation needs Node 24 LTS; the inherited PATH selects Node
+  20.10.0, which lacks the `node:util` `styleText` export required by rolldown.
 
 ## Next Actions
 
-1. Re-check Dependabot's bun.lock v2 support now and then (see Known Risks); until
+1. Use PR #15 for the dependency repair CI and merge status. All checks,
+   including CodeQL, must pass before squash merge.
+2. Re-check Dependabot's bun.lock v2 support now and then (see Known Risks); until
    then `bun audit` in CI is the dependency gate.
-2. Listen to the 28 presets on real devices; tune the single-level band width
+3. Listen to the 28 presets on real devices; tune the single-level band width
    (ADR-0001 D6) if it feels off. Any change: changeset → PR → version PR → tag.
-3. Optional hardening, as in the sibling repos: `actions/attest-build-provenance` on
+4. Optional hardening, as in the sibling repos: `actions/attest-build-provenance` on
    the packed tarballs; `npm trust … --env release` to pin the trusted publisher to
    the environment; `npm stage publish` as a second gate (trust already allows it).
-4. Sibling repos share the PR-only `main` ruleset (every `ci.yaml` PR job
+5. Sibling repos share the PR-only `main` ruleset (every `ci.yaml` PR job
    required, matched by name), secret-scanning extras, CodeQL, a relative uv
    `exclude-newer = "7 days"` and frozen lockfile installs (2026-09-04); their
    handover/release docs were delegated and reviewed.

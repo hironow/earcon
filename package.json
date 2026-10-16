@@ -19,7 +19,7 @@
   "devDependencies": {
     "@changesets/cli": "^3",
     "@happy-dom/global-registrator": "^20",
-    "@playwright/test": "^1.63",
+    "@playwright/test": "^1.64",
     "@types/bun": "^1.4",
     "typescript": "catalog:"
   }

@@ -10,7 +10,7 @@
       "@types/react": "^19",
       "@types/react-dom": "^19",
       "tone": "^15",
-      "typescript": "^5",
+      "typescript": "^7",
       "tsdown": "^0.22.14",
       "vite": "^8",
       "@vitejs/plugin-react": "^6"

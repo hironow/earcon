@@ -23,5 +23,9 @@ updates:
       prefix: "chore"
       include: "scope"
     groups:
+      # React requires an exact renderer version match. Put the family before
+      # the generic development group so it also claims the two type packages.
+      react-family:
+        patterns: ["react", "react-dom", "@types/react", "@types/react-dom"]
       dev-dependencies:
         dependency-type: "development"

@@ -1,6 +1,6 @@
 # Handover
 
-**Last updated:** 2026-10-11 (JST)
+**Last updated:** 2026-10-24 (JST)
 **Updated by:** Codex
 
 ## Current State
@@ -17,6 +17,10 @@ CodeQL are on, aligned with `hironow/firepact` and `hironow/tablecodec`.
 
 ## In Progress
 
+- PRs #23 and #25 passed check and e2e, but CodeQL reported NEUTRAL because
+  Actions and JavaScript/TypeScript PR analyses were missing. Retrigger analysis
+  through a normal branch push; require successful analyses on each current head
+  before squash merge. Do not treat the aggregate green status as CodeQL success.
 - [PR #15](https://github.com/hironow/earcon/pull/15): dependency refresh plus
   shell-quote 1.12.0 and source-map-js 1.2.2 security fixes. Local audit,
   `just check`, build, pack and all 25 E2E tests pass. Designer E2E also passed

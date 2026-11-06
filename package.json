@@ -11,7 +11,7 @@
       "@types/react-dom": "^19",
       "tone": "^15",
       "typescript": "^7",
-      "tsdown": "^0.23.0",
+      "tsdown": "^0.23.4",
       "vite": "^8.2.4",
       "@vitejs/plugin-react": "^6"
     }
